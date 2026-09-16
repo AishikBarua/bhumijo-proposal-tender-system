@@ -1,0 +1,68 @@
+# Bhumijo on the Synology NAS.
+#
+# In Container Manager:  Project  ->  Create  ->  point it at this file.
+#
+# restart: unless-stopped is the line that solves your actual problem — the
+# container comes back on its own when the NAS reboots, with nobody logged in.
+
+services:
+  bhumijo:
+    build: .
+    image: bhumijo:latest
+    container_name: bhumijo
+
+    restart: unless-stopped
+
+    ports:
+      # <NAS port>:<container port>. Keep 8787 on the left so the address
+      # people type does not change: http://192.168.1.200:8787
+      - "8787:8787"
+
+    volumes:
+      # The ONLY folder that holds your data. Back this up and you have
+      # everything: both databases, the logs and the nightly backups.
+      #
+      # This path is on the NAS's own internal disk. Do not point it at a
+      # mounted network share — SQLite cannot run from one.
+      - ./data:/app/data
+
+    environment:
+      # --- the tracker -------------------------------------------------
+      BHUMIJO_ENV: production
+      BHUMIJO_HOST: 0.0.0.0
+      BHUMIJO_PORT: 8787
+
+      # Office devices get in without typing a token. Only private
+      # addresses are trusted; anything from the public internet still
+      # needs one. Set to "false" to require the token again.
+      BHUMIJO_TRUST_LOCAL_NETWORK: "true"
+
+      BHUMIJO_LOG_LEVEL: INFO
+
+      # --- the AI Agent ------------------------------------------------
+      # These are NOT in the project folder — they have to be supplied here.
+      # Put the real values in a file called ".env" next to this one; Docker
+      # reads it automatically and it stays out of the project's files.
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL_CHEAP: ${ANTHROPIC_MODEL_CHEAP:-}
+      ANTHROPIC_MODEL_CAPABLE: ${ANTHROPIC_MODEL_CAPABLE:-}
+
+      IMAP_HOST: ${IMAP_HOST:-}
+      IMAP_PORT: ${IMAP_PORT:-}
+      IMAP_APP_PASSWORD: ${IMAP_APP_PASSWORD:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+
+      PROPOSAL_TRACKER_URL: ${PROPOSAL_TRACKER_URL:-http://127.0.0.1:8787}
+      PROPOSAL_TRACKER_TOKEN: ${PROPOSAL_TRACKER_TOKEN:-}
+
+      AGENT_DASHBOARD_URL: ${AGENT_DASHBOARD_URL:-}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Dhaka}
+
+    # Keeps the NAS log tidy rather than letting it grow without limit.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

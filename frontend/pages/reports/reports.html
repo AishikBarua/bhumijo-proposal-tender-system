@@ -1,0 +1,42 @@
+<!-- The reports screen.
+     Markup lifted unchanged from the original single file. -->
+
+    <div class="page" id="page-reports">
+      <div class="report-controls" style="flex-wrap:wrap;gap:10px;align-items:flex-end;padding:14px 18px">
+        <div style="display:flex;flex-direction:column;gap:4px;min-width:170px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px">Entity</div>
+          <select class="filter-select" id="report-entity" onchange="generateReport()" style="width:100%">
+            <option value="">All Entities</option>
+            <option value="P&D">Planning &amp; Design</option>
+            <option value="FM">Facility Management</option>
+            <option value="WASH">WASH / Toilets</option>
+            <option value="Tech">Technology</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px">Start Date</div>
+          <input type="date" class="form-input" id="report-start-date" onchange="onDateRangeChange()" style="width:148px">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px">End Date</div>
+          <input type="date" class="form-input" id="report-end-date" onchange="onDateRangeChange()" style="width:148px">
+        </div>
+        <button class="btn btn-primary" onclick="generateReport()" style="align-self:flex-end;padding:8px 20px;font-size:13px">▶ Generate Report</button>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.7px">Quick Select</div>
+          <div style="display:flex;gap:5px">
+            <button class="btn btn-ghost qs-btn" onclick="quickSelect('biweekly')" id="qs-biweekly">Biweekly</button>
+            <button class="btn btn-ghost qs-btn" onclick="quickSelect('monthly')" id="qs-monthly">Monthly</button>
+            <button class="btn btn-ghost qs-btn" onclick="quickSelect('quarterly')" id="qs-quarterly">Quarterly</button>
+            <button class="btn btn-ghost qs-btn" onclick="quickSelect('yearly')" id="qs-yearly">Yearly</button>
+            <button class="btn btn-primary qs-btn active-qs" onclick="quickSelect('alltime')" id="qs-alltime">📅 All Time</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;align-items:flex-end;margin-left:auto">
+          <button class="btn btn-ghost" onclick="printReport()" style="font-size:12px">🖨 Print</button>
+          <button class="btn btn-ghost" onclick="downloadReportPDF()" style="font-size:12px">↓ PDF</button>
+          <button class="btn btn-primary" onclick="downloadReportDOC()" style="font-size:12px">↓ DOC</button>
+        </div>
+      </div>
+      <div id="report-output"></div>
+    </div>

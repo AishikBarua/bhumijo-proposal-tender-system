@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Email settings</h1>
+<div class="subtitle">Automatically read tender alert emails and run them through Stages 1-4 (classify, parse, screen for relevance, preliminary fit score). Final eligibility is still a human decision - see the "Needs review" bucket on the dashboard.</div>
+
+<div class="panel" style="background: var(--amber-light); border-color: var(--amber);">
+  <strong>This needs a Zoho App Password, not the normal account password.</strong>
+  <ol style="margin: 10px 0 0; padding-left: 20px; font-size: 14px;">
+    <li>Confirm IMAP Access is enabled for this account: Zoho Mail Settings → Mail Accounts → IMAP.</li>
+    <li>Go to <code>accounts.zoho.com</code> → Security → App Passwords and generate a new one (name it something like "Tender Agent").</li>
+    <li>Open <code>bhumijo_system\.env</code> in Notepad and paste it after <code>IMAP_APP_PASSWORD=</code> (no quotes, no spaces), then restart the server. A system environment variable of the same name also works and takes priority. It is not entered on this page, so it never sits in this app's database. (The old <code>GMAIL_APP_PASSWORD</code> name still works but is deprecated.)</li>
+  </ol>
+</div>
+
+<div class="panel"{% if not app_password_configured %} style="background: var(--coral-light); border-color: var(--coral);"{% endif %}>
+  <div class="detail-block">
+    <div class="k">App Password</div>
+    {% if app_password_configured %}
+      <div class="v">configured via environment variable</div>
+    {% else %}
+      <div class="v" style="color: var(--coral);">NOT SET — see docs/SECURITY.md</div>
+    {% endif %}
+  </div>
+  <div class="detail-block">
+    <div class="k">IMAP server</div>
+    <div class="v">{{ imap_host }}:{{ imap_port }}</div>
+  </div>
+</div>
+
+{% if result %}
+<div class="panel" style="border-color: var(--teal);">
+  <div class="detail-block"><div class="k">Result</div><div class="v">{{ result }}</div></div>
+</div>
+{% endif %}
+
+<form class="panel" method="post" action="/agent/email-settings">
+  <label for="imap_email">Email address</label>
+  <input type="text" name="imap_email" id="imap_email" value="{{ settings.imap_email or '' }}" placeholder="you@yourdomain.com">
+
+  <label for="sender_filter">Keyword hints (optional)</label>
+  <input type="text" name="sender_filter" id="sender_filter" value="{{ settings.sender_filter or '' }}" placeholder="tender, procurement, RFP, EOI, quotation">
+  <div class="subtitle" style="margin: 4px 0 0; font-size: 12px;">Mail is scanned broadly from any sender - this just nudges the Stage 1 classifier, it does not filter anything out by itself.</div>
+
+  <label for="sender_denylist">Sender denylist (optional)</label>
+  <input type="text" name="sender_denylist" id="sender_denylist" value="{{ settings.sender_denylist or '' }}" placeholder="newsletter@example.com, noreply@somesite.com">
+  <div class="subtitle" style="margin: 4px 0 0; font-size: 12px;">Comma-separated sender substrings that are always skipped entirely - no AI call, no processing.</div>
+
+  <div class="field-row">
+    <div>
+      <label for="check_interval_minutes">Check interval (minutes)</label>
+      <input type="number" name="check_interval_minutes" id="check_interval_minutes" min="5" value="{{ settings.check_interval_minutes or 15 }}">
+    </div>
+    <div>
+      <label for="enabled">Automatic checking</label>
+      <select name="enabled" id="enabled">
+        <option value="off" {% if not settings.enabled %}selected{% endif %}>Disabled</option>
+        <option value="on" {% if settings.enabled %}selected{% endif %}>Enabled</option>
+      </select>
+    </div>
+  </div>
+
+  <label for="notify_email">Status email address</label>
+  <input type="text" name="notify_email" id="notify_email" value="{{ settings.notify_email or '' }}" placeholder="{{ settings.imap_email or 'you@yourdomain.com' }} (defaults to the email address above)">
+
+  <div class="field-row">
+    <div>
+      <label for="notify_enabled">Status email after every check</label>
+      <select name="notify_enabled" id="notify_enabled">
+        <option value="on" {% if settings.notify_enabled %}selected{% endif %}>Enabled</option>
+        <option value="off" {% if not settings.notify_enabled %}selected{% endif %}>Disabled</option>
+      </select>
+    </div>
+  </div>
+  <div class="subtitle" style="margin: 4px 0 0; font-size: 12px;">Sent after every scheduled and "Check now" run - success, nothing-new, or failure alike. If no email arrives, something is wrong even if nothing is "new" - that's the point.</div>
+
+  <div style="margin-top:20px;"><button class="btn" type="submit">Save settings</button></div>
+</form>
+
+<form class="panel" method="post" action="/agent/email-settings/test-connection">
+  <h2>Test connection</h2>
+  <div class="subtitle">Attempts an IMAP login only against {{ imap_host }}:{{ imap_port }} - no email fetching, no AI calls, zero cost. Use this to verify the App Password before running a real check.</div>
+  <button class="btn secondary" type="submit">Test connection</button>
+</form>
+
+<form class="panel" method="post" action="/agent/email-settings/check-now">
+  <h2>Check now</h2>
+  <div class="subtitle">Runs Stages 1-4 immediately using the saved settings above, without waiting for the scheduled interval.</div>
+  <button class="btn secondary" type="submit">Check now</button>
+</form>
+
+<div class="panel"{% if settings.last_status == "error" %} style="background: var(--coral-light); border-color: var(--coral);"{% endif %}>
+  <h2>Status</h2>
+  {% if not settings.last_checked_at %}
+    <div class="detail-block"><div class="v">Never run yet. Save your email address above, confirm the App Password is set (see docs/SECURITY.md), and click "Check now", or wait for the scheduled interval.</div></div>
+  {% elif settings.last_status == "error" %}
+    <div class="detail-block">
+      <div class="k" style="color: var(--coral);">Last check failed</div>
+      <div class="v" style="color: var(--coral);">{{ settings.last_checked_at|localtime('%d %b %H:%M') }} — {{ settings.last_error }}</div>
+    </div>
+    <div class="detail-block">
+      <div class="k">Last successful check</div>
+      <div class="v">{{ settings.last_success_at|localtime('%d %b %H:%M') if settings.last_success_at else "never" }}</div>
+    </div>
+  {% else %}
+    <div class="detail-block"><div class="k">Last successful check</div><div class="v">{{ settings.last_success_at|localtime('%d %b %H:%M') if settings.last_success_at else "Never" }}</div></div>
+    <div class="detail-block"><div class="k">Result</div><div class="v">{{ settings.last_summary or "—" }}</div></div>
+  {% endif %}
+</div>
+{% endblock %}

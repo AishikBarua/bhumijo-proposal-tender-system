@@ -1,0 +1,78 @@
+{% extends "free_base.html" %}
+{% block body %}
+<h1>Tenders found by keyword</h1>
+<p class="sub">No AI, no API key, no cost. Found by matching your keyword list
+against BDTender alert emails.</p>
+
+{% if message %}<div class="banner info">{{ message }}</div>{% endif %}
+
+{% if not mailbox_ready %}
+<div class="banner warn">
+  <strong>The mailbox is not set up yet</strong>, so nothing arrives automatically.
+  Add the email address and app password under
+  <a href="/agent/email-settings">Email settings</a>.
+  Meanwhile you can <a href="/agent-free/paste">paste a digest by hand</a> to
+  see exactly how it will behave.
+</div>
+{% endif %}
+
+<div class="card">
+  <form method="post" action="/agent-free/check-now" style="display:inline">
+    <button {% if not mailbox_ready %}disabled title="Set up the mailbox first"{% endif %}>
+      Check the mailbox now
+    </button>
+  </form>
+  <a class="btn ghost" href="/agent-free/paste">Paste a digest</a>
+  <a class="btn ghost" href="/agent-free/keywords">Edit keywords
+    ({{ keywords.english|length + keywords.bengali|length }} terms)</a>
+  {% if settings and settings.last_checked_at %}
+    <p class="hint">Last checked {{ settings.last_checked_at|localtime('%d %b %H:%M') }}
+      — {{ settings.last_summary or settings.last_status or '' }}</p>
+  {% endif %}
+</div>
+
+<div class="card">
+{% if tenders %}
+  <table>
+    <thead>
+      <tr><th>Tender</th><th>Business</th><th>Organisation</th><th>District</th>
+          <th>Deadline</th><th>Doc price</th><th>Why it was kept</th></tr>
+    </thead>
+    <tbody>
+    {% for t in tenders %}
+      <tr>
+        <td>
+          {% if t.notice_url %}<a href="{{ t.notice_url }}" target="_blank" rel="noopener">{{ t.title }}</a>
+          {% else %}{{ t.title }}{% endif %}
+          {% if t.tender_ref %}<div class="why">Ref {{ t.tender_ref }}</div>{% endif %}
+        </td>
+        <td><span class="entity-tag entity-{{ (t.entity or 'other')|lower|replace('&','') }}">{{ t.entity or '—' }}</span></td>
+        <td>{{ t.organization or '—' }}</td>
+        <td>{{ t.district or '—' }}</td>
+        <td>{% if t.deadline_date %}{{ t.deadline_date.strftime('%d %b %Y') }}
+            {% else %}<span class="pill grey">not stated</span>{% endif %}</td>
+        <td>{{ t.document_price or '—' }}</td>
+        <td>
+          <span class="pill">{{ t.fit_score }} matches</span>
+          <div class="why">{{ t.fit_reasons }}</div>
+          <div class="why"><span class="pill warn">eligibility not checked</span></div>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="empty">Nothing found yet.<br>
+    {% if mailbox_ready %}The next check runs within 15 minutes.
+    {% else %}Paste a digest to try it out.{% endif %}</p>
+{% endif %}
+</div>
+
+<div class="card">
+  <p class="hint"><strong>What this cannot do.</strong> Keywords find tenders;
+  they cannot read eligibility rules. Every row above says
+  <em>eligibility not checked</em> for that reason — open the notice and confirm
+  you qualify before spending time on a bid. Reading a notice or a PDF properly
+  needs the AI Agent and an API key.</p>
+</div>
+{% endblock %}

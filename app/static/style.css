@@ -1,0 +1,246 @@
+:root {
+  --ink: #16302c;
+  --ink-soft: #4a635e;
+  --paper: #f6f4ee;
+  --card: #ffffff;
+  --line: #dcd7c8;
+  --teal: #0f6e56;
+  --teal-light: #e1f5ee;
+  --amber: #854f0b;
+  --amber-light: #faeeda;
+  --coral: #993c1d;
+  --coral-light: #faece7;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Noto Sans Bengali", -apple-system, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+a { color: var(--teal); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.topbar {
+  background: var(--ink);
+  color: #fff;
+  padding: 18px 32px;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.topbar .brand { font-size: 18px; font-weight: 600; letter-spacing: 0.02em; }
+.topbar .brand span { color: #7fcbb0; }
+.topbar nav a { color: #d7ece5; margin-left: 20px; font-size: 14px; }
+.topbar nav a:hover { color: #fff; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 32px 24px 60px; }
+
+h1 { font-size: 24px; font-weight: 600; margin: 0 0 6px; }
+h2 { font-size: 17px; font-weight: 600; margin: 0 0 12px; }
+.subtitle { color: var(--ink-soft); font-size: 14px; margin-bottom: 28px; }
+
+.stat-row { display: flex; gap: 16px; margin-bottom: 32px; }
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  flex: 1;
+}
+.stat .num { font-size: 26px; font-weight: 600; }
+.stat .label { font-size: 13px; color: var(--ink-soft); }
+
+.card-list { display: flex; flex-direction: column; gap: 12px; }
+
+.tender-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--teal);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: block;
+}
+.tender-card.rejected { border-left-color: var(--coral); opacity: 0.75; }
+.tender-card.needs-review { border-left-color: var(--amber); }
+.tender-card .title { font-weight: 600; font-size: 15px; margin-bottom: 4px; color: var(--ink); }
+.tender-card .meta { font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; }
+.tender-card .reason { font-size: 13px; color: var(--ink-soft); }
+
+.badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 9px;
+  border-radius: 20px;
+  margin-right: 6px;
+}
+.badge.pass { background: var(--teal-light); color: var(--teal); }
+.badge.fail { background: var(--coral-light); color: var(--coral); }
+.badge.score { background: var(--amber-light); color: var(--amber); }
+.badge.review { background: var(--amber-light); color: var(--amber); }
+
+.deadline-badge { font-size: 13px; font-weight: 600; }
+.deadline-badge.urgent { color: var(--coral); }
+.deadline-badge.soon { color: var(--amber); }
+.deadline-badge.muted { color: var(--ink-soft); font-weight: 400; }
+
+.search-form { display: flex; gap: 10px; margin-bottom: 24px; }
+.search-form input[type=text] { flex: 1; }
+
+.btn {
+  display: inline-block;
+  background: var(--teal);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn:hover { background: #0b5744; text-decoration: none; }
+.btn.secondary { background: transparent; color: var(--teal); border: 1px solid var(--teal); }
+
+form.panel, .panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+label { display: block; font-size: 13px; font-weight: 600; margin: 14px 0 6px; }
+label:first-child { margin-top: 0; }
+input[type=text], input[type=number], textarea, select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  background: #fff;
+}
+textarea { resize: vertical; min-height: 100px; }
+
+.field-row { display: flex; gap: 12px; }
+.field-row > div { flex: 1; }
+
+.detail-block { margin-bottom: 18px; }
+.detail-block .k { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.detail-block .v { font-size: 14px; white-space: pre-wrap; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; text-transform: uppercase; color: var(--ink-soft); letter-spacing: 0.03em; }
+
+.empty { color: var(--ink-soft); font-size: 14px; padding: 30px; text-align: center; border: 1px dashed var(--line); border-radius: var(--radius); }
+
+.error-box { background: var(--coral-light); color: var(--coral); padding: 12px 16px; border-radius: 8px; font-size: 14px; margin-bottom: 16px; }
+
+.del-link { color: var(--coral); font-size: 12px; }
+
+/* ---------- Structured tender sheet (tender_detail.html) ---------- */
+
+.type-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1px 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.stepper-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.stepper { display: flex; align-items: center; gap: 2px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px; margin: 0; }
+.stepper-step {
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.stepper-step:hover { background: var(--teal-light); color: var(--teal); }
+.stepper-step.active { background: var(--teal); color: #fff; }
+.stepper-step.active:hover { background: var(--teal); }
+.stepper-arrow { color: var(--ink-soft); padding: 0 2px; font-size: 13px; }
+.reject-form { margin: 0; }
+.btn.reject-btn { background: var(--coral); }
+.btn.reject-btn:hover { background: #7a2f16; }
+.btn.reject-btn.active { box-shadow: 0 0 0 2px var(--coral-light) inset; }
+.status-note { font-size: 13px; color: var(--ink-soft); margin: -10px 0 20px; }
+
+.sheet { padding: 0; }
+.sheet-section { padding: 18px 20px; border-bottom: 1px solid var(--line); }
+.sheet-section:last-child { border-bottom: none; }
+.sheet-section h1 { margin: 0 0 4px; }
+.sheet-caller { color: var(--ink-soft); font-size: 14px; }
+.sheet-priority { margin-top: 8px; }
+
+.sheet-row { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 6px 0; }
+.sheet-row .k { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.sheet-row .v { font-size: 14px; text-align: right; }
+
+.sheet-block-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+.sheet-block-body { font-size: 14px; white-space: pre-wrap; }
+
+.unavailable-panel {
+  background: var(--amber-light);
+  color: var(--amber);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.unavailable-panel p { margin: 0; font-size: 14px; }
+
+.priority-badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 20px; }
+.priority-badge.high { background: var(--coral-light); color: var(--coral); }
+.priority-badge.medium { background: var(--amber-light); color: var(--amber); }
+.priority-badge.low { background: var(--teal-light); color: var(--teal); }
+
+.inline-edit-form { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; }
+.inline-edit-form select { width: auto; }
+.inline-edit-form textarea { flex: 1; min-height: 80px; }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .sheet, .panel { border: 1px solid #999; }
+  a { color: var(--ink); text-decoration: underline; }
+}
+
+/* Which of Bhumijo's four businesses a tender belongs to. Sits beside
+   .type-label (the procurement format) - the two answer different questions,
+   so they are shown together rather than one replacing the other. Colours
+   match the entity dots in the Proposal Tracker sidebar. */
+.entity-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.entity-wash  { background: #efe3fb; color: #6b3fa0; }
+.entity-pd    { background: #e3ecfd; color: #2a5db0; }
+.entity-fm    { background: #e0f5ec; color: #1a7a52; }
+.entity-tech  { background: #fdf0d9; color: #96650d; }
+.entity-other { background: #eceef2; color: #6a7085; }

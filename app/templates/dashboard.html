@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% block content %}
+<h1>Tender shortlist</h1>
+<div class="subtitle">Every tender processed so far, filtered and ranked against Bhumijo's capability profile.</div>
+
+<form class="search-form" method="get" action="/agent/">
+  <input type="text" name="q" value="{{ q }}" placeholder="Search title, organisation, district, or tender reference">
+  {% if show_filtered %}<input type="hidden" name="show_filtered" value="true">{% endif %}
+  {% if show_expired %}<input type="hidden" name="show_expired" value="true">{% endif %}
+  <button class="btn secondary" type="submit">Search</button>
+  {% if q %}<a class="btn secondary" href="/agent/">Clear</a>{% endif %}
+</form>
+
+<div class="stat-row">
+  <div class="stat"><div class="num">{{ total }}</div><div class="label">Showing</div></div>
+  <div class="stat"><div class="num">{{ shortlisted|length }}</div><div class="label">Shortlisted</div></div>
+  <div class="stat"><div class="num">{{ needs_review|length }}</div><div class="label">Needs review</div></div>
+  <div class="stat"><div class="num">{{ others|length }}</div><div class="label">Not a fit</div></div>
+  <div class="stat"><div class="num" style="{% if urgent_count %}color: var(--coral);{% endif %}">{{ urgent_count }}</div><div class="label">Urgent (&le;7 days)</div></div>
+</div>
+
+<h2>Shortlisted ({{ shortlisted|length }})</h2>
+<div class="card-list">
+  {% if shortlisted %}
+    {% for t in shortlisted %}
+    <a class="tender-card" href="/agent/tender/{{ t.id }}">
+      <div class="title">{{ t.title or "Untitled tender" }}</div>
+      <div class="meta">{{ t.organization or t.location or "Location n/a" }}{{ macros.type_label(t) }}{% if t.district %} &middot; {{ t.district }}{% endif %} &middot; Deadline: {{ t.deadline or "n/a" }}{% if t.estimated_value %} &middot; Est. value: {{ t.estimated_value }}{% elif t.document_price %} &middot; Document price: {{ t.document_price }}{% endif %}</div>
+      <span class="badge pass">Eligible</span>
+      <span class="badge score">Fit {{ t.fit_score }}/100</span>
+      {{ macros.deadline_badge(t) }}
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty">No shortlisted tenders yet.</div>
+  {% endif %}
+</div>
+
+<h2 style="margin-top:32px;">Needs review ({{ needs_review|length }})</h2>
+<div class="subtitle" style="margin-bottom:12px;">Eligibility isn't in the alert email - only the notice has it. Open the notice, and if it looks worth pursuing, paste it into Add tender for a full eligibility check. Sorted by deadline, soonest first.</div>
+<div class="card-list">
+  {% if needs_review %}
+    {% for t in needs_review %}
+    <a class="tender-card needs-review" href="/agent/tender/{{ t.id }}">
+      <div class="title">{{ t.title or "Untitled tender" }}</div>
+      <div class="meta">
+        {{ t.organization or "Organization n/a" }}{{ macros.type_label(t) }}{% if t.district %} &middot; {{ t.district }}{% endif %} &middot; Deadline: {{ t.deadline or "n/a" }}{% if t.document_price %} &middot; Document price: {{ t.document_price }}{% endif %}
+        {% if t.notice_url %}&middot; <a href="{{ t.notice_url }}" target="_blank" rel="noopener" onclick="event.stopPropagation()">View notice &rarr;</a>{% endif %}
+      </div>
+      <span class="badge review">Needs review</span>
+      {% if t.fit_score is not none %}<span class="badge score">Fit {{ t.fit_score }}/100</span>{% endif %}
+      {{ macros.deadline_badge(t) }}
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty">Nothing awaiting review.</div>
+  {% endif %}
+</div>
+
+<h2 style="margin-top:32px;">Not a fit ({{ others|length }})</h2>
+<div class="card-list">
+  {% if others %}
+    {% for t in others %}
+    <a class="tender-card rejected" href="/agent/tender/{{ t.id }}">
+      <div class="title">{{ t.title or "Untitled tender" }}</div>
+      <div class="meta">{{ t.organization or t.location or "Location n/a" }}{{ macros.type_label(t) }} &middot; Deadline: {{ t.deadline or "n/a" }}</div>
+      {% if t.hard_filter_pass %}
+        <span class="badge score">Fit {{ t.fit_score }}/100</span>
+      {% else %}
+        <span class="badge fail">Not eligible</span>
+      {% endif %}
+      {{ macros.deadline_badge(t) }}
+      <div class="reason">{{ t.hard_filter_reason or t.fit_reasons }}</div>
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty">Nothing filtered out yet.</div>
+  {% endif %}
+</div>
+
+<div style="margin-top:32px; display:flex; gap:10px;">
+  {% if show_filtered %}
+    <a class="btn secondary" href="/agent/?{% if q %}q={{ q }}&{% endif %}{% if show_expired %}show_expired=true{% endif %}">Hide filtered-out listings</a>
+  {% else %}
+    <a class="btn secondary" href="/agent/?{% if q %}q={{ q }}&{% endif %}show_filtered=true{% if show_expired %}&show_expired=true{% endif %}">Show filtered-out listings ({{ filtered_out_count }})</a>
+  {% endif %}
+  {% if show_expired %}
+    <a class="btn secondary" href="/agent/?{% if q %}q={{ q }}&{% endif %}{% if show_filtered %}show_filtered=true{% endif %}">Hide expired listings</a>
+  {% else %}
+    <a class="btn secondary" href="/agent/?{% if q %}q={{ q }}&{% endif %}show_expired=true{% if show_filtered %}&show_filtered=true{% endif %}">Show expired listings ({{ expired_count }})</a>
+  {% endif %}
+</div>
+
+{% if show_filtered %}
+<h2 style="margin-top:24px;">Filtered out ({{ filtered_out|length }})</h2>
+<div class="subtitle">Listings the relevance screen (Stage 3) dropped as out of sector. Kept so the screen can be audited for false negatives - see README.</div>
+<div class="card-list">
+  {% if filtered_out %}
+    {% for t in filtered_out %}
+    <a class="tender-card rejected" href="/agent/tender/{{ t.id }}">
+      <div class="title">{{ t.title or "Untitled tender" }}</div>
+      <div class="meta">{{ t.organization or "Organization n/a" }}{{ macros.type_label(t) }}{% if t.district %} &middot; {{ t.district }}{% endif %} &middot; Deadline: {{ t.deadline or "n/a" }}</div>
+      <span class="badge fail">Filtered out</span>
+      {{ macros.deadline_badge(t) }}
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty">Nothing filtered out yet.</div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if show_expired %}
+<h2 style="margin-top:24px;">Expired ({{ expired|length }})</h2>
+<div class="subtitle">Auto-archived once the deadline passed (status was "new" or "filtered_out" - shortlisted/applied tenders are never auto-archived).</div>
+<div class="card-list">
+  {% if expired %}
+    {% for t in expired %}
+    <a class="tender-card rejected" href="/agent/tender/{{ t.id }}">
+      <div class="title">{{ t.title or "Untitled tender" }}</div>
+      <div class="meta">{{ t.organization or t.location or "Location n/a" }}{{ macros.type_label(t) }}{% if t.district %} &middot; {{ t.district }}{% endif %} &middot; Deadline: {{ t.deadline or "n/a" }}</div>
+      <span class="badge fail">Expired</span>
+      {{ macros.deadline_badge(t) }}
+    </a>
+    {% endfor %}
+  {% else %}
+    <div class="empty">Nothing expired yet.</div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

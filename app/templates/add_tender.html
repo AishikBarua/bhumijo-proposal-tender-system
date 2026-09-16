@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add a tender</h1>
+<div class="subtitle">Paste the tender text (e.g. from a BDTender email) or upload a PDF notice. The AI will extract details and check it against your company profile.</div>
+
+{% if error %}<div class="error-box">{{ error }}</div>{% endif %}
+
+<form class="panel" method="post" action="/agent/add-tender" enctype="multipart/form-data">
+  <label for="source">Source</label>
+  <select name="source" id="source">
+    <option value="BDTender email">BDTender email</option>
+    <option value="e-GP">e-GP</option>
+    <option value="Donor/NGO portal">Donor/NGO portal</option>
+    <option value="manual">Manual / other</option>
+  </select>
+
+  <label for="tender_text">Tender text (paste here)</label>
+  <textarea name="tender_text" id="tender_text" placeholder="Paste the tender notice text here..."></textarea>
+
+  <label for="pdf_file">Or upload a PDF notice</label>
+  <input type="file" name="pdf_file" id="pdf_file" accept="application/pdf">
+
+  <div style="margin-top:20px;">
+    <button class="btn" type="submit">Process tender</button>
+  </div>
+</form>
+{% endblock %}

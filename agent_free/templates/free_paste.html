@@ -1,0 +1,16 @@
+{% extends "free_base.html" %}
+{% block body %}
+<h1>Paste a digest</h1>
+<p class="sub">Copy a BDTender alert email and paste it here. This runs the
+exact same parsing, keywords and saving as the automatic check — so whatever
+happens here is what will happen automatically once the mailbox is set up.</p>
+
+<form method="post" action="/agent-free/paste">
+  <div class="card">
+    <label for="digest">The email (paste the whole thing — HTML or plain text)</label>
+    <textarea id="digest" name="digest" placeholder="Paste the BDTender email here…"></textarea>
+    <p class="hint">In your mail client: open the email, select all, copy, paste here.</p>
+    <p style="margin-top:16px"><button type="submit">Find tenders in this</button></p>
+  </div>
+</form>
+{% endblock %}

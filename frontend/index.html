@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bhumijo · Proposal Tracker</title>
+
+<!-- The design system, then the components. Both lifted unchanged from the
+     original single file, so the screens look exactly as they did. -->
+<link rel="stylesheet" href="/app/resources/css/tokens.css">
+<link rel="stylesheet" href="/app/resources/css/components.css">
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">Bhumijo</div>
+      <div class="logo-sub">Proposal Tracker</div>
+    </div>
+    <div class="module-toggle-wrap">
+      <div class="module-toggle-label">Module</div>
+      <div class="module-toggle" id="module-toggle">
+        <div class="module-toggle-slider"></div>
+        <div class="module-toggle-btn active" id="module-btn-tracker" onclick="switchModulePage('tracker')">
+          <span class="module-toggle-dot"></span>Proposal
+        </div>
+        <div class="module-toggle-btn" id="module-btn-hitlist" onclick="switchModulePage('hitlist')">
+          <span class="module-toggle-dot"></span>Grant
+        </div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Entities</div>
+      <div class="nav-item" onclick="filterByEntity('P&D')" data-entity="P&D">
+        <span class="nav-entity-dot" style="background:var(--pd)"></span> Planning & Design
+      </div>
+      <div class="nav-item" onclick="filterByEntity('FM')" data-entity="FM">
+        <span class="nav-entity-dot" style="background:var(--fm)"></span> Facility Management
+      </div>
+      <div class="nav-item" onclick="filterByEntity('WASH')" data-entity="WASH">
+        <span class="nav-entity-dot" style="background:var(--wash)"></span> WASH / Toilets
+      </div>
+      <div class="nav-item" onclick="filterByEntity('Tech')" data-entity="Tech">
+        <span class="nav-entity-dot" style="background:var(--tech)"></span> Technology
+      </div>
+      <div class="nav-section-label" style="margin-top:6px">Views</div>
+      <div class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+        <span class="nav-icon">◈</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showPage('proposals')" data-page="proposals">
+        <span class="nav-icon">≡</span> All Proposals
+      </div>
+      <div class="nav-item" onclick="showPage('clients')" data-page="clients">
+        <span class="nav-icon">◉</span> Clients
+      </div>
+      <div class="nav-item" onclick="showPage('reports')" data-page="reports">
+        <span class="nav-icon">◎</span> Reports
+      </div>
+      <div class="nav-item" onclick="goToAiAgent()" data-page="ai-agent">
+        <span class="nav-icon">✦</span> AI Agent
+      </div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="today-badge">
+        <strong id="sidebar-date">–</strong>
+        Today's date
+      </div>
+      <div class="server-panel">
+        <div class="server-panel-head">
+          <span class="server-dot off" id="server-dot"></span> Server Connection
+        </div>
+        <input type="text" class="server-field" id="server-ip-input" placeholder="Server IP e.g. 192.168.1.137:8787" autocomplete="off">
+        <input type="password" class="server-field" id="server-token-input" placeholder="Access token" autocomplete="off">
+        <button class="server-btn connect" id="server-connect-btn" onclick="toggleServerConnection()">Connect</button>
+        <div class="server-status" id="server-status-text">Not connected</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Dims the page behind the open sidebar drawer and closes it when
+       tapped. Inert on the desktop layout. -->
+  <div class="sidebar-scrim" id="sidebar-scrim" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <!-- Opens the sidebar once it becomes a drawer. Hidden by CSS on
+           the desktop layout, where the sidebar is always on screen. -->
+      <button class="sidebar-toggle" id="sidebar-toggle" type="button"
+              aria-label="Menu" aria-expanded="false" aria-controls="sidebar"
+              onclick="toggleSidebar()">&#9776;</button>
+      <div>
+        <div class="topbar-title" id="topbar-title">Dashboard</div>
+        <div class="topbar-sub" id="topbar-sub">All entities · Overview</div>
+      </div>
+      <button class="btn btn-ai" onclick="openAddModal()">✦ Add via AI Upload</button>
+      <button class="btn btn-primary" onclick="openAddModal(false)">+ New Proposal</button>
+      <button class="btn btn-ghost" onclick="exportCSV()">↓ Export CSV</button>
+    </div>
+
+    <!-- Each screen's markup is loaded from its own folder under pages/.
+         The containers are filled by loader.js before anything runs. -->
+    <div id="screen-dashboard"></div>
+    <div id="screen-proposals"></div>
+    <div id="screen-clients"></div>
+    <div id="screen-reports"></div>
+
+  </div>
+</div>
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- Chart.js. Loads the local copy first so the charts still draw when the
+     office internet is down — which they did not before. Falls back to the
+     CDN until the local copy is in place; run tools/vendor_chartjs.py once
+     to download it. -->
+<script src="/app/resources/vendor/chart.umd.min.js"
+        onerror="this.onerror=null;
+                 var s=document.createElement('script');
+                 s.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+                 document.head.appendChild(s);
+                 console.warn('Chart.js not found locally — fell back to the CDN. '
+                            + 'Run tools/vendor_chartjs.py to work offline.');"></script>
+
+<!--
+  Load order matters and is deliberate: shared helpers, then state, then the
+  connection layer, then navigation, then one file per screen.
+
+  These are plain scripts sharing one scope, exactly as the original single
+  <script> block did. That is what guarantees the split changed nothing: the
+  browser sees the same code in the same order, just kept in separate files.
+  Converting them to true ES modules with explicit imports is a later,
+  separately testable step — it is a real change and does not belong in a
+  move that is meant to be behaviour-identical.
+-->
+<script src="/app/services/loader.js"></script>
+<script src="/app/services/format.js"></script>
+<script src="/app/services/state.js"></script>
+<script src="/app/services/connection.js"></script>
+<script src="/app/services/navigation.js"></script>
+<script src="/app/pages/dashboard/dashboard.js"></script>
+<script src="/app/pages/proposals/proposals.js"></script>
+<script src="/app/pages/clients/clients.js"></script>
+<script src="/app/pages/reports/reports.js"></script>
+<script src="/app/services/bootstrap.js"></script>
+</body>
+</html>

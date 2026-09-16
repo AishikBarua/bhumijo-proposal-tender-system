@@ -1,0 +1,42 @@
+{% extends "free_base.html" %}
+{% block body %}
+<h1>Keywords</h1>
+<p class="sub">These decide what gets kept. One term per line. Changes take
+effect on the next check — no restart needed.</p>
+
+<div class="card">
+  <form method="post" action="/agent-free/test-keywords">
+    <label for="sample">Try a tender title against the current list</label>
+    <input type="text" id="sample" name="sample" value="{{ sample or '' }}"
+           placeholder="e.g. Construction of public toilet at Mirpur bus terminal">
+    <p style="margin-top:12px"><button type="submit" class="ghost">Test it</button></p>
+  </form>
+  {% if result %}
+    <div class="banner {{ 'info' if result.relevant else 'warn' }}" style="margin-top:14px">
+      <strong>{{ 'KEPT' if result.relevant else 'SKIPPED' }}</strong> — {{ result.reason }}
+    </div>
+  {% endif %}
+</div>
+
+<form method="post" action="/agent-free/keywords">
+  <div class="card">
+    <label for="english">English terms</label>
+    <textarea id="english" name="english">{{ keywords.english|join('\n') }}</textarea>
+    <p class="hint">Whole words only — "park" will not match "parking".</p>
+
+    <label for="bengali">Bengali terms</label>
+    <textarea id="bengali" name="bengali">{{ keywords.bengali|join('\n') }}</textarea>
+    <p class="hint">Matched anywhere in the text, since Bengali has no word
+      boundaries a computer can rely on. <strong>Worth checking against a few
+      real alerts</strong> — these were drafted, not taken from your actual
+      notices, and a wrong term means missed tenders with no warning.</p>
+
+    <label for="exclude">Never keep, even if a keyword matched</label>
+    <textarea id="exclude" name="exclude">{{ keywords.exclude|join('\n') }}</textarea>
+    <p class="hint">Stops things like "supply of drinking water bottles"
+      matching "water supply".</p>
+
+    <p style="margin-top:18px"><button type="submit">Save keywords</button></p>
+  </div>
+</form>
+{% endblock %}

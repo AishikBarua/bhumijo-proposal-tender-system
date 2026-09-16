@@ -1,0 +1,1054 @@
+<!-- The grant hitlist screen.
+     Carried across unchanged from bhumijo-Hitlist-22Jul2026.html. It is
+     still a self-contained page rather than a module of the shell —
+     folding it in properly is a separate step, and doing it here would
+     have been a behaviour change rather than a move. -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhumijo Grant Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F2F4F0;--surf:#FFF;--surf2:#F7F8F5;--brd:#DDE0D8;--brd2:#C8CCBF;
+  --t1:#1C2218;--t2:#4A5244;--t3:#8A9284;
+  --gr:#256B3E;--gr-l:#E6F3EC;--bl:#1B4F8A;--bl-l:#E6EFF9;
+  --am:#8A5200;--am-l:#FEF4E2;--rd:#8A1C1C;--rd-l:#FEF0F0;
+  --pu:#5B2A8A;--pu-l:#F0EAFA;--tl:#1A6B6B;--tl-l:#E4F3F3;
+  --bh:#256B3E;--bh2:#1A4D2C;--bha:#5BAA7B;
+  --sb:220px;--r:8px;--shl:0 8px 30px rgba(0,0,0,.13);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t1);font-size:13px;line-height:1.5;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+button{cursor:pointer;font-family:inherit;font-size:12px}
+input,select,textarea{font-family:inherit;font-size:13px}
+a{color:var(--bh);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--bh2);color:#fff;
+  padding:0 20px;display:flex;align-items:center;justify-content:space-between;
+  height:52px;flex-shrink:0;z-index:300;gap:12px;
+}
+.logo{font-size:16px;font-weight:700;letter-spacing:-.3px;display:flex;align-items:center;gap:8px}
+.logo span{color:var(--bha)}
+.logo-icon{font-size:20px}
+.today{background:rgba(255,255,255,.12);padding:3px 10px;border-radius:20px;font-size:11px;color:rgba(255,255,255,.85);font-weight:500;white-space:nowrap}
+.top-actions{display:flex;gap:6px;flex-shrink:0}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border-radius:6px;border:none;font-weight:600;transition:all .15s;cursor:pointer}
+.btn-p{background:var(--bha);color:#fff}.btn-p:hover{background:#4a9a6a}
+.btn-o{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.25)}.btn-o:hover{background:rgba(255,255,255,.18)}
+.btn-g{background:var(--bg);color:var(--t2);border:1px solid var(--brd)}.btn-g:hover{background:var(--brd)}
+.btn-d{background:var(--rd-l);color:var(--rd);border:1px solid #f0b0b0}
+.btn-sm{padding:4px 9px;font-size:11px}
+
+/* ── BODY LAYOUT: sidebar + content ── */
+.body-wrap{display:flex;flex:1;overflow:hidden}
+
+/* ── LEFT SIDEBAR ── */
+.sidebar{
+  width:var(--sb);flex-shrink:0;
+  background:var(--bh2);
+  display:flex;flex-direction:column;
+  padding:16px 0 20px;
+  overflow-y:auto;
+}
+.module-toggle-wrap{padding:0 18px 16px;margin-bottom:4px;border-bottom:1px solid rgba(255,255,255,.1)}
+.module-toggle-label{font-size:9px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px}
+.module-toggle{position:relative;display:flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:3px}
+.module-toggle-slider{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);background:#18b0a0;border-radius:999px;box-shadow:0 2px 8px rgba(24,176,160,.4);transition:transform .25s ease,background .25s ease;z-index:0}
+.module-toggle.hitlist .module-toggle-slider{transform:translateX(100%)}
+.module-toggle-btn{position:relative;z-index:1;flex:1;text-align:center;padding:7px 6px;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);cursor:pointer;border-radius:999px;transition:color .2s ease;user-select:none;white-space:nowrap}
+.module-toggle-btn.active{color:#fff}
+.module-toggle-dot{width:5px;height:5px;border-radius:50%;background:currentColor;display:inline-block;margin-right:4px;opacity:.9;vertical-align:middle}
+.sb-section-label{
+  font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  color:rgba(255,255,255,.35);padding:0 18px;margin:18px 0 6px;
+}
+.sb-section-label:first-child{margin-top:0}
+.ntab{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 18px;
+  font-size:12px;font-weight:600;color:rgba(255,255,255,.6);
+  cursor:pointer;transition:all .15s;
+  border-left:3px solid transparent;
+  position:relative;
+}
+.ntab:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.ntab.active{
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  border-left-color:var(--bha);
+}
+.ntab .nico{font-size:15px;flex-shrink:0}
+.ntab .nlbl{flex:1}
+.ncnt{
+  background:rgba(255,255,255,.15);color:rgba(255,255,255,.8);
+  padding:1px 6px;border-radius:10px;font-size:10px;font-weight:700;
+}
+.ntab.active .ncnt{background:var(--bha);color:#fff}
+.ncnt-hot{background:#D97706!important;color:#fff!important}
+
+.sb-divider{height:1px;background:rgba(255,255,255,.1);margin:12px 18px}
+
+.sb-stats{padding:0 14px;margin-top:4px}
+.sb-stat{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,.07);
+  font-size:11px;color:rgba(255,255,255,.55);
+}
+.sb-stat:last-child{border-bottom:none}
+.sb-stat strong{color:rgba(255,255,255,.85);font-size:13px}
+
+/* ── TODAY BADGE + SERVER CONNECTION PANEL (sidebar) ── */
+.sb-bottom{margin-top:auto;padding:14px 14px 0}
+.today-badge{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:8px 10px;font-size:11px;color:rgba(255,255,255,.4)}
+.today-badge strong{color:rgba(255,255,255,.85);font-weight:600;display:block;font-size:13px}
+.server-panel{margin-top:10px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+.server-panel-head{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:700;letter-spacing:1.1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:9px}
+.server-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);flex-shrink:0;transition:background .2s}
+.server-dot.on{background:var(--bha);box-shadow:0 0 5px rgba(91,170,123,.7)}
+.server-dot.off{background:rgba(255,255,255,.25)}
+.server-dot.error{background:#f87171}
+.server-field{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#fff;font-size:12px;padding:7px 9px;margin-bottom:7px;font-family:inherit}
+.server-field::placeholder{color:rgba(255,255,255,.35)}
+.server-field:focus{outline:none;border-color:var(--bha);background:rgba(255,255,255,.12)}
+.server-btn{width:100%;border:none;border-radius:8px;padding:8px 9px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:opacity .15s}
+.server-btn:hover{opacity:.88}
+.server-btn.connect{background:var(--bha);color:#0d2216}
+.server-btn.disconnect{background:#e04545;color:#fff}
+.server-status{margin-top:7px;font-size:11px;color:rgba(255,255,255,.4);text-align:center}
+.server-status.on{color:var(--bha)}
+.server-status.error{color:#f87171}
+
+/* ── MAIN CONTENT ── */
+.content{flex:1;overflow-y:auto;padding:18px 20px;background:var(--bg)}
+
+/* ── STAT CARDS ── */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:16px}
+.sc{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:11px 13px;position:relative;overflow:hidden}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--acc,var(--bh))}
+.sc .sn{font-size:22px;font-weight:700;color:var(--acc,var(--bh));line-height:1}
+.sc .sl{font-size:10px;color:var(--t3);margin-top:3px}
+
+/* ── FILTER BAR ── */
+.fbar{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.fbar label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px}
+.fbar select,.fbar input[type=text],.fbar input[type=date]{border:1px solid var(--brd);border-radius:5px;padding:4px 7px;background:var(--bg);color:var(--t1);outline:none;font-size:12px}
+.fbar select:focus,.fbar input:focus{border-color:var(--bha)}
+.sw{position:relative}.sw input{min-width:160px}
+.fdiv{width:1px;height:16px;background:var(--brd);margin:0 2px}
+
+/* ── TABLE ── */
+.tbl-wrap{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);overflow:auto;max-height:calc(100vh - 280px)}
+.cnote{font-size:11px;color:var(--t3);margin-bottom:6px}
+table{width:100%;border-collapse:collapse;min-width:1250px}
+thead th{background:#EEF0EA;padding:7px 10px;text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);border-bottom:1px solid var(--brd);white-space:nowrap;position:sticky;top:0;z-index:10}
+tbody tr{border-bottom:1px solid var(--brd);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#F7F9F5}
+tbody tr.exp{opacity:.5}
+td{padding:7px 10px;vertical-align:top}
+
+.pname{font-weight:600;font-size:12px;max-width:180px;line-height:1.3}
+.pinv{font-size:10px;color:var(--bh);font-weight:600;margin-top:1px}
+.phq{font-size:10px;color:var(--t3)}
+.pcombo{font-size:9px;color:var(--brd2);margin-top:2px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pticket{font-size:10px;color:var(--t3);margin-top:2px;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfocus{font-size:10px;color:var(--bha);font-weight:600;margin-top:1px;max-width:220px;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:12px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-r{background:var(--gr-l);color:var(--gr)}.b-f{background:var(--bl-l);color:var(--bl)}
+.b-sr{background:#E8F5E9;color:#2E7D32;border:1px dashed #81C784}
+.b-sf{background:#E3F0FB;color:#1565C0;border:1px dashed #90CAF9}
+.b-drop{background:var(--rd-l);color:var(--rd)}.b-sub{background:var(--pu-l);color:var(--pu)}
+.b-fp{background:var(--am-l);color:var(--am)}.b-act{background:var(--tl-l);color:var(--tl)}
+.b-acc{background:var(--gr-l);color:var(--gr)}.b-rej{background:var(--rd-l);color:var(--rd)}
+.b-pip{background:#FFF8E1;color:#E65100;border:1px solid #FFCC02}
+.tchip{display:inline-block;padding:2px 5px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;background:#EEF0EA;color:var(--t2);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.d-ok{color:var(--gr);font-weight:600;font-size:11px}.d-soon{color:#D97706;font-weight:700;font-size:11px}
+.d-urg{color:var(--rd);font-weight:700;font-size:11px}.d-exp{color:var(--t3);font-style:italic;font-size:10px}
+.d-roll{color:var(--t3);font-style:italic;font-size:10px}
+.tval{font-size:10px;color:var(--t2);max-width:120px;line-height:1.3}
+.ccell{font-size:10px;color:var(--t2);max-width:180px;line-height:1.4}
+.cclip{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.link-cell a{display:inline-flex;align-items:center;gap:3px;padding:3px 7px;border-radius:4px;background:var(--bl-l);color:var(--bl);font-size:10px;font-weight:600;border:1px solid #c5d8f0;white-space:nowrap}
+.link-cell a:hover{background:#d4e6f7}
+.link-cell .no-link{font-size:10px;color:var(--brd2);font-style:italic}
+.iact{display:flex;gap:3px}
+.ib{width:22px;height:22px;border:1px solid var(--brd);border-radius:4px;background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:var(--t2);transition:all .1s}
+.ib:hover{background:var(--bg)}
+
+/* ── PIPELINE ── */
+.pband{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.pcard{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px}
+.pcard h4{font-size:11px;font-weight:700;margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.ptag{padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.pi{display:flex;align-items:flex-start;gap:6px;padding:5px 0;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .1s}
+.pi:last-child{border-bottom:none}
+.pi:hover{background:var(--bg);margin:0 -4px;padding:5px 4px;border-radius:4px}
+.pid{width:5px;height:5px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.pin{font-size:11px;font-weight:600}.pim{font-size:9px;color:var(--t3)}
+.pidy{font-size:10px;font-weight:700;white-space:nowrap;margin-left:auto;padding-left:6px}
+
+/* ── REPORT ── */
+.rctrl{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 16px;display:flex;align-items:flex-end;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.rctrl-group{display:flex;flex-direction:column;gap:4px}
+.rctrl-group label{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px}
+.rctrl-group input[type=date]{border:1px solid var(--brd);border-radius:5px;padding:5px 8px;background:var(--bg);color:var(--t1);outline:none;font-size:12px;cursor:pointer}
+.rctrl-group input[type=date]:focus{border-color:var(--bha)}
+.rctrl-divider{width:1px;height:36px;background:var(--brd);align-self:flex-end;margin-bottom:2px}
+.quick-btns{display:flex;gap:5px;flex-wrap:wrap;align-items:flex-end;padding-bottom:1px}
+.qbtn{padding:4px 10px;border-radius:5px;border:1px solid var(--brd);background:var(--bg);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;transition:all .1s;white-space:nowrap}
+.qbtn.active{background:var(--bh);color:#fff;border-color:var(--bh)}
+.apply-btn{padding:5px 14px;border-radius:5px;border:none;background:var(--bha);color:#fff;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+.apply-btn:hover{background:#4a9a6a}
+.period-label{font-size:11px;color:var(--t2);background:var(--gr-l);border:1px solid var(--bha);border-radius:5px;padding:4px 10px;font-weight:600;white-space:nowrap;align-self:flex-end}
+.prbtn{padding:5px 12px;border-radius:5px;border:1px solid var(--brd2);background:var(--surf);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;margin-left:auto;align-self:flex-end}
+.prbtn:hover{background:var(--bg)}
+.rgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.rc{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px}
+.rc .rn{font-size:24px;font-weight:700;line-height:1}.rc .rl{font-size:10px;color:var(--t3);margin-top:3px}
+.rc .rs{font-size:10px;margin-top:3px;font-weight:700}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.cc{background:var(--surf);border:1px solid var(--brd);border-radius:var(--r);padding:13px}
+.cc h4{font-size:11px;font-weight:700;color:var(--t2);margin-bottom:9px}
+.cw{position:relative;height:200px}.cw canvas{max-height:200px}
+
+/* ── MODAL ── */
+.ovl{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;overflow-y:auto;padding:16px;align-items:flex-start;justify-content:center}
+.ovl.open{display:flex}
+.modal{background:var(--surf);border-radius:12px;width:100%;max-width:640px;box-shadow:var(--shl);margin:auto}
+.mhdr{padding:14px 18px 11px;border-bottom:1px solid var(--brd);display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.mhdr h3{font-size:14px;font-weight:700}.mhdr p{font-size:11px;color:var(--t3);margin-top:1px}
+.mcls{width:24px;height:24px;border:none;background:var(--bg);border-radius:5px;font-size:14px;color:var(--t2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mcls:hover{background:var(--brd)}
+.mbdy{padding:14px 18px}.mftr{padding:9px 18px 13px;border-top:1px solid var(--brd);display:flex;justify-content:flex-end;gap:6px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.fgf{grid-column:1/-1}
+.fg{display:flex;flex-direction:column;gap:3px}
+.fg label{font-size:10px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.3px}
+.req{color:var(--rd)}
+.fg input,.fg select,.fg textarea{border:1px solid var(--brd);border-radius:5px;padding:4px 6px;background:var(--bg);color:var(--t1);outline:none;font-size:12px}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--bha);background:#fff}
+.fg input.invalid,.fg select.invalid,.fg textarea.invalid{border-color:#e04545;background:#FEF0F0}
+.fg textarea{resize:vertical;min-height:60px}
+.fsect{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t3);margin:11px 0 6px;border-bottom:1px solid var(--brd);padding-bottom:3px}
+.tabsw{display:flex;border:1px solid var(--brd);border-radius:5px;overflow:hidden;margin-bottom:12px}
+.tsw{flex:1;padding:6px;border:none;background:var(--surf);color:var(--t2);font-size:11px;font-weight:600;cursor:pointer;transition:all .1s}
+.tsw.active{background:var(--bh);color:#fff}
+.uzn{border:2px dashed var(--brd2);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:all .15s;background:var(--surf2)}
+.uzn:hover,.uzn.drag{border-color:var(--bha);background:var(--gr-l)}
+.uzn .ui{font-size:24px;margin-bottom:4px}.uzn p{font-size:12px;color:var(--t2)}.uzn small{font-size:10px;color:var(--t3)}
+.uprog{margin-top:7px;display:none}.uprog.show{display:block}
+.pbar{height:3px;background:var(--brd);border-radius:2px;overflow:hidden;margin-top:3px}
+.pfill{height:100%;background:var(--bha);border-radius:2px;transition:width .3s}
+.aires{background:var(--gr-l);border:1px solid var(--bha);border-radius:var(--r);padding:9px;margin-top:9px;display:none;font-size:11px;color:var(--t2)}
+.aires.show{display:block}.aires strong{color:var(--bh);display:block;margin-bottom:4px}
+.dfield{margin-bottom:8px}
+.dfield label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--t3);margin-bottom:1px}
+.dfield p{font-size:12px;color:var(--t1);line-height:1.5}
+.lgnd{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.li{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t2)}
+.ld{width:7px;height:7px;border-radius:50%}
+.toast{position:fixed;bottom:16px;right:16px;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;transform:translateY(60px);opacity:0;transition:all .25s;pointer-events:none;background:var(--t1);color:#fff}
+.toast.show{transform:translateY(0);opacity:1}.toast.ok{background:var(--bh)}.toast.err{background:var(--rd)}
+.empty{padding:44px;text-align:center;color:var(--t3);font-size:13px}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:3px}
+@media print{
+  html,body{height:auto!important;overflow:visible!important}
+  .topbar,.sidebar,.fbar,.iact,.rctrl,.prbtn{display:none!important}
+  .body-wrap{display:block!important;overflow:visible!important}
+  .content{padding:0!important;overflow:visible!important;height:auto!important;flex:none!important}
+  .rgrid{grid-template-columns:repeat(2,1fr)!important}
+  .cgrid{grid-template-columns:1fr!important}
+  .rc,.cc,.sc{break-inside:avoid;page-break-inside:avoid}
+  .rgrid,.cgrid{break-inside:auto}
+  .cw{height:170px}
+  .cw canvas{max-height:170px}
+  @page{size:landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo"><span class="logo-icon">🌿</span> Bhumijo <span>Grant Tracker</span></div>
+  <div class="today" id="todayBadge"></div>
+  <div class="top-actions">
+    <button class="btn btn-o btn-sm" onclick="openAdd('upload')">📁 Upload File</button>
+    <button class="btn btn-p btn-sm" onclick="openAdd('manual')">＋ Add Program</button>
+  </div>
+</div>
+
+<!-- BODY: sidebar + content -->
+<div class="body-wrap">
+
+  <!-- LEFT SIDEBAR -->
+  <div class="sidebar">
+    <div class="module-toggle-wrap">
+      <div class="module-toggle-label">Module</div>
+      <div class="module-toggle hitlist" id="module-toggle">
+        <div class="module-toggle-slider"></div>
+        <div class="module-toggle-btn" id="module-btn-tracker" onclick="switchModulePage('tracker')">
+          <span class="module-toggle-dot"></span>Proposal
+        </div>
+        <div class="module-toggle-btn active" id="module-btn-hitlist" onclick="switchModulePage('hitlist')">
+          <span class="module-toggle-dot"></span>Grant
+        </div>
+      </div>
+    </div>
+    <div class="sb-section-label">Navigation</div>
+
+    <div class="ntab active" onclick="setTab('tracker')" id="t-tracker">
+      <span class="nico">📋</span>
+      <span class="nlbl">Hitlist</span>
+      <span class="ncnt" id="c-tracker">0</span>
+    </div>
+    <div class="ntab" onclick="setTab('pipeline')" id="t-pipeline">
+      <span class="nico">🚀</span>
+      <span class="nlbl">Pipeline</span>
+      <span class="ncnt ncnt-hot" id="c-pipeline">0</span>
+    </div>
+    <div class="ntab" onclick="setTab('rolling')" id="t-rolling">
+      <span class="nico">🔄</span>
+      <span class="nlbl">Rolling</span>
+      <span class="ncnt" id="c-rolling">0</span>
+    </div>
+    <div class="ntab" onclick="setTab('report')" id="t-report">
+      <span class="nico">📊</span>
+      <span class="nlbl">Reports</span>
+    </div>
+
+    <div class="sb-divider"></div>
+    <div class="sb-section-label">Quick Stats</div>
+    <div class="sb-stats">
+      <div class="sb-stat"><span>Total</span><strong id="sb-total">0</strong></div>
+      <div class="sb-stat"><span>Submitted</span><strong id="sb-sub">0</strong></div>
+      <div class="sb-stat"><span>Accepted</span><strong id="sb-acc" style="color:var(--bha)">0</strong></div>
+      <div class="sb-stat"><span>Rejected</span><strong id="sb-rej" style="color:#f87171">0</strong></div>
+      <div class="sb-stat"><span>Follow-up</span><strong id="sb-fp" style="color:#FBB040">0</strong></div>
+      <div class="sb-stat"><span>Dropped</span><strong id="sb-drp" style="color:rgba(255,255,255,.4)">0</strong></div>
+    </div>
+
+    <div class="sb-bottom">
+      <div class="today-badge">
+        <strong id="sidebar-date">–</strong>
+        Today's date
+      </div>
+      <div class="server-panel">
+        <div class="server-panel-head">
+          <span class="server-dot off" id="server-dot"></span> Server Connection
+        </div>
+        <input type="text" class="server-field" id="server-ip-input" placeholder="Server IP e.g. 192.168.1.137:8787" autocomplete="off">
+        <input type="password" class="server-field" id="server-token-input" placeholder="Access token" autocomplete="off">
+        <button class="server-btn connect" id="server-connect-btn" onclick="toggleServerConnection()">Connect</button>
+        <div class="server-status" id="server-status-text">Not connected</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content" id="main"></div>
+
+</div><!-- /body-wrap -->
+
+<!-- ADD MODAL -->
+<div class="ovl" id="addOvl">
+<div class="modal">
+  <div class="mhdr">
+    <div><h3 id="addTitle">Add New Program</h3><p>Fields marked <span class="req">*</span> are required</p></div>
+    <button class="mcls" onclick="closeOvl('addOvl')">×</button>
+  </div>
+  <div class="mbdy">
+    <div class="tabsw">
+      <button class="tsw active" id="sw-m" onclick="swTab('manual')">✏️ Manual Entry</button>
+      <button class="tsw" id="sw-u" onclick="swTab('upload')">📁 Upload & Auto-Extract</button>
+    </div>
+    <div id="mForm">
+      <div class="fsect">Identity</div>
+      <div class="fg2">
+        <div class="fg fgf"><label>Program Name <span class="req">*</span></label><input id="fn" placeholder="e.g. DIV FUND — USAID"></div>
+        <div class="fg"><label>Investor / Funder <span class="req">*</span></label><input id="fi" placeholder="e.g. USAID, Gates Foundation"></div>
+        <div class="fg"><label>HQ Country <span class="req">*</span></label><input id="fh" placeholder="e.g. United States"></div>
+      </div>
+      <div class="fsect">Type & Focus</div>
+      <div class="fg2">
+        <div class="fg"><label>Program Type <span class="req">*</span></label>
+          <select id="ft"><option value="">— Select —</option><option>Grant</option><option>Award</option><option>Equity</option><option>Loan</option><option>Capacity Building</option><option>Debt</option><option>Mix-model</option><option>Other</option></select>
+        </div>
+        <div class="fg"><label>Classification <span class="req">*</span></label>
+          <select id="fc"><option value="">— Select —</option><option value="rolling">Rolling (no fixed deadline)</option><option value="fixed">Fixed (annual/set deadline)</option><option value="suggested-rolling">Suggested: Rolling</option><option value="suggested-fixed">Suggested: Fixed</option></select>
+        </div>
+        <div class="fg fgf"><label>Focus Area <span class="req">*</span></label><input id="ff" placeholder="e.g. WASH, Climate, Gender Equality"></div>
+        <div class="fg"><label>Ticket Size <span class="req">*</span></label><input id="fk" placeholder="e.g. $100K–$500K"></div>
+        <div class="fg"><label>Geography</label><input id="fgeo" placeholder="e.g. Global, Bangladesh, South Asia"></div>
+      </div>
+      <div class="fsect">Deadline & Status</div>
+      <div class="fg2">
+        <div class="fg"><label>Closing Date</label><input type="date" id="fd"></div>
+        <div class="fg"><label>Website / Apply Link</label><input id="fl" type="url" placeholder="https://..."></div>
+        <div class="fg"><label>File Location</label><input id="ffloc" placeholder="e.g. folder path or drive link to saved documents"></div>
+        <div class="fg"><label>Submission Status</label>
+          <select id="fs"><option value="">— None —</option><option>Rolling</option><option>Yet to Submit</option><option>Submitted</option><option>Drop</option><option>Fail to Submit</option></select>
+        </div>
+        <div class="fg"><label>Result</label>
+          <select id="fr"><option value="">— None —</option><option>Follow-up</option><option>Accepted</option><option>Rejected</option><option>Waiting for Result</option></select>
+        </div>
+      </div>
+      <div class="fsect">Notes</div>
+      <div class="fg"><label>Comments / Analysis</label><textarea id="fco"></textarea></div>
+    </div>
+    <div id="uForm" style="display:none">
+      <div class="uzn" id="dz" onclick="document.getElementById('fi2').click()">
+        <div class="ui">📄</div>
+        <p><strong>Drop file here or click to browse</strong></p>
+        <small>PDF, XLSX, DOCX, CSV, TXT — Claude AI extracts program details automatically</small>
+        <input type="file" id="fi2" style="display:none" accept=".pdf,.xlsx,.xls,.docx,.csv,.txt" onchange="handleUpload(this)">
+      </div>
+      <div class="uprog" id="uprog">
+        <p style="font-size:11px;color:var(--t2);margin-bottom:2px" id="upst">Reading file…</p>
+        <div class="pbar"><div class="pfill" id="pf" style="width:0%"></div></div>
+      </div>
+      <div class="aires" id="aires"><strong>✓ Extracted — review below:</strong><div id="aixt"></div></div>
+      <div id="ufSec" style="display:none;margin-top:11px">
+        <div class="fsect">Review & Confirm Extracted Data</div>
+        <div class="fg2">
+          <div class="fg fgf"><label>Program Name <span class="req">*</span></label><input id="ufn"></div>
+          <div class="fg"><label>Investor <span class="req">*</span></label><input id="ufi"></div>
+          <div class="fg"><label>HQ Country <span class="req">*</span></label><input id="ufh"></div>
+          <div class="fg"><label>Type <span class="req">*</span></label>
+            <select id="uft"><option value="">—</option><option>Grant</option><option>Award</option><option>Equity</option><option>Loan</option><option>Capacity Building</option><option>Debt</option><option>Mix-model</option><option>Other</option></select>
+          </div>
+          <div class="fg"><label>Classification</label>
+            <select id="ufc"><option value="">—</option><option value="rolling">Rolling</option><option value="fixed">Fixed</option><option value="suggested-rolling">Suggested Rolling</option><option value="suggested-fixed">Suggested Fixed</option></select>
+          </div>
+          <div class="fg fgf"><label>Focus Area <span class="req">*</span></label><input id="uff"></div>
+          <div class="fg"><label>Ticket Size <span class="req">*</span></label><input id="ufk"></div>
+          <div class="fg"><label>Geography</label><input id="ufg"></div>
+          <div class="fg"><label>Closing Date</label><input type="date" id="ufd"></div>
+          <div class="fg"><label>Website / Apply Link</label><input id="ufl" type="url" placeholder="https://..."></div>
+          <div class="fg"><label>File Location</label><input id="uffloc" placeholder="e.g. folder path or drive link to saved documents"></div>
+          <div class="fg"><label>Status</label>
+            <select id="ufs"><option value="">—</option><option>Rolling</option><option>Yet to Submit</option><option>Submitted</option><option>Drop</option><option>Fail to Submit</option></select>
+          </div>
+          <div class="fg"><label>Result</label>
+            <select id="ufr"><option value="">—</option><option>Follow-up</option><option>Accepted</option><option>Rejected</option><option>Waiting for Result</option></select>
+          </div>
+        </div>
+        <div class="fg" style="margin-top:8px"><label>Comments</label><textarea id="ufco" style="min-height:55px"></textarea></div>
+      </div>
+    </div>
+  </div>
+  <div class="mftr">
+    <button class="btn btn-g btn-sm" onclick="closeOvl('addOvl')">Cancel</button>
+    <button class="btn btn-p btn-sm" onclick="saveP()">Save Program</button>
+  </div>
+</div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="ovl" id="dtlOvl">
+<div class="modal" id="dtlC"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const T0=new Date();T0.setHours(0,0,0,0);
+function switchModulePage(mod){
+  if(mod==='tracker'){ window.location.href='Bhumijo_Proposal_Tracker_22Jul2026.html'; }
+}
+function dU(s){if(!s)return null;const d=new Date(s);d.setHours(0,0,0,0);return Math.round((d-T0)/864e5)}
+
+const SEED=[{"id": 1, "name": "DIV FUND", "investor": "USAID", "hq": "United States", "type": "Grant/ Award", "ticket": "Stage 1: up to $200K | Stage 2: up to $500K | Stage 3: up to $1.5M", "geo": "Global", "focus": "Evidence-driven innovations that cost-effectively improve lives of people in poverty", "closing": "2026-07-30", "status": "Rolling", "result": "Follow-up", "cls": "rolling", "comment": "- 09072026: Strong fit — apply at Stage 2 ($500K). Bhumijo meets all core criteria\nCritical framing: position as a technology-enabled service delivery model, NOT physical infrastructure construction. Emphasise Smart Dashboard, Odor Sensor, Digital Entry Gate, Facility App as the innovation — not the centres themselves.\n- JVA is possible", "link": "https://www.div.fund/apply/form"}, {"id": 2, "name": "Audacious Project", "investor": "TED / Philanthropic Network", "hq": "United States", "type": "Grant/ Award", "ticket": "Philathrophic Grant, typically $10M–$100M+ over multi-year term; no fixed cap", "geo": "Global", "focus": "Large-scale Social Innovation and Impact, min annual budget $2 million, need partnership", "closing": "2026-07-30", "status": "Rolling", "result": "", "cls": "rolling", "comment": "- 09072026: Not yet eligible — revisit 2029–2030. \nThree hard barriers: \n(1) requires $2M+ annual budget — Bhumijo currently at ~$101K; \n(2) requires nonprofit/NGO legal structure; \n(3) idea must be globally transformative at massive scale. Mission and story are genuinely Audacious-worthy. Submit an expression of interest once Bhumijo reaches $2M+ revenue, 250+ centres, and establishes a nonprofit arm. \n- JVA is not possible", "link": "https://audaciousproject.my.site.com/s/Apply-IdeaSurvey/Idea_Submission"}, {"id": 3, "name": "Toilet Board Coalition Accelerator 2027", "investor": "Toilet Board Coalition", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Sanitation technology innovations, startup support", "closing": "2026-07-30", "status": "", "result": "", "cls": "fixed", "comment": "- 09072026: Will we apply again for 2027? Though application portal does not open yet \n- JVA is possible\n- Bhumijo Applied to Toilet Accelerator 2020 and got accepted", "link": ""}, {"id": 4, "name": "SHELeads Leadership Program (Cohort 5, 2026) — Nüshu Network", "investor": "Nüshu Network", "hq": "Singapore", "type": "Capacity building", "ticket": "USD $25 early-bird (until Jul 31) / USD $50 regular — participant pays; scholarships available", "geo": "South and Southeast Asia — Bangladesh eligible", "focus": "Leadership development for women entrepreneurs in for-profit enterprises — mindset, personal branding, investment readiness, fundraising, purpose-driven leadership, unconscious bias; 9-week virtual self-paced + live peer sessions", "closing": "2026-07-31", "status": "", "result": "Follow-up", "cls": "fixed", "comment": "- 13072026: Apply now — strong fit for Farhana Rashid personally. This is a paid training (USD $25 early-bird), not a grant — but investment readiness and fundraising curriculum directly strengthens Farhana's funder conversations. Program runs Sep 7 – Nov 5, 2026 (virtual). Enroll before July 31 to get 50% discount. Contact team@nushunetwork.asia for scholarship if needed. \nJVA: Not applicable — individual enrollment, not an organizational grant program. \n- Apply by July 31, 2026 to access the Early Bird rate at 50% off; Entry fee $25\n- After Early Bird session, Apply by 30 August, Entry Fee $50 (regular).", "link": ""}, {"id": 5, "name": "2027 Lipman Family Prize", "investor": "Wharton / University of Pennsylvania", "hq": "United States", "type": "Grant/ Award", "ticket": "Grand Prize USD $300,000 + two runner-up prizes USD $150,000 each; also Wharton exec education + Penn leadership scholarship", "geo": "Global", "focus": "Leadership and innovation in the social sector — any issue area; emphasis on impact, scalability, and transferability of practices to other contexts; budget must be under $5M 3-year average", "closing": "2026-08-01", "status": "", "result": "Follow-up", "cls": "fixed", "comment": "- 09072026: Drop — nonprofit status required; Bhumijo is a for-profit entity. All other criteria are excellent fits: budget well under $5M ceiling, global mission, strong impact story, transferable model. \n- Single action needed: if Bhumijo registers a nonprofit arm or foundation, this becomes one of the highest-priority applications in the pipeline. Email lipmanprize@wharton.upenn.edu to ask if a for-profit social enterprise with nonprofit-equivalent governance qualifies — there may be flexibility given the international context. Revisit annually.\n- may apply as JV (need to check through email)", "link": "https://bit.ly/LipmanApplication2027"}, {"id": 6, "name": "Agency Fund", "investor": "Agency Fund", "hq": "United States", "type": "Grant/ Award", "ticket": "USD $10,000–$1,000,000; median ~$200,000; larger affiliate fund awards up to $3.5M", "geo": "Global", "focus": "Human agency-focused interventions — AI-powered counseling, coaching, behavioral nudges, decision support tools that help people in poverty navigate health, education, livelihood, and financial choices; rigorous impact evaluation required; 1M+ user scale potential needed", "closing": "2026-08-30", "status": "Rolling", "result": "Follow-up", "cls": "rolling", "comment": "- 09072026: Drop — fundamental thematic mismatch. Agency Fund backs behavioral science and AI-powered decision support interventions, not service delivery infrastructure. Full portfolio (Noora Health, ConsiliumBots, Rocket Learning, Busara Center) is coaching/counseling/information tools. Also Spring 2026 round already closed (Apr 26). Revisit only if Bhumijo develops a distinct hygiene behavior-change digital product (e.g. community health coaching via app) as a separable intervention with standalone impact evidence.\n- Quarterly basis\n- JVA is not possible", "link": "https://airtable.com/appBA2SroXdl6c8mO/pagu7R55rppf6WIow/form"}, {"id": 7, "name": "BTI Stellar Women Awards (Edition 3) — The Daily Star", "investor": "The Daily Star / BTI", "hq": "Bangladesh", "type": "Grant/ Award", "ticket": "Only Award/ Recognitions", "geo": "Bangladesh", "focus": "Categories: Enterpreneur, Corporate\nArchitect, Sports, Art & Culture, \nBanks & Financial Instituitions", "closing": "2026-08-31", "status": "Rolling", "result": "Follow-up", "cls": "rolling", "comment": "-11072026: Apply now — strong fit for Farhana Rashid under Entrepreneur category. Apply as Founder & CEO of a technology-enabled social enterprise with 75 centres and 180 employees (80% women) is an ideal candidate. Non-monetary but high national visibility — Daily Star coverage directly strengthens Bhumijo's local credibility and supports investor/funder narrative. No fee, no deadline pressure — register immediately. Contact: stellarwomen@thedailystar.net / +8801914933120.", "link": "https://docs.google.com/forms/d/e/1FAIpQLSfl7By6aAfyVxQyhDWez_RIv0ZlcusfFEIVEYu5knb1zSeX4g/viewform"}, {"id": 8, "name": "Rainer Arnhold Fellows (Mulago Foundation)", "investor": "Mulago Foundation", "hq": "United States", "type": "Mix-model", "ticket": "USD $100,000 unrestricted upfront + year-long coaching + consideration for long-term Mulago portfolio funding ($7K–$800K ongoing)", "geo": "Global", "focus": "Scalable poverty solutions — health, education, livelihoods, WASH, environment; for-profit and nonprofit both eligible; CEO/founder must apply as individual leader; solution must show exponential impact potential", "closing": "2026-08-31", "status": "", "result": "Follow-up", "cls": "fixed", "comment": "- 09072026: Strong fit — prepare now, apply in August 2026 sourcing window. Bhumijo meets all core criteria: WASH focus, for-profit eligible, South Asia preferred geography, Farhana as CEO applicant, scalable model with 75 centres + 15,000 daily users. Two actions needed immediately: \n(1) Sign up for Mulago Links newsletter at mulagofoundation.org to get notified when sourcing opens — subscribers can also send referrals. \n(2) Seek a warm referral from a trusted funder in Bhumijo's network (e.g. Vitol Foundation, DIV contacts, TBC alumni network) — referrals dramatically increase selection odds from 1,000+ applicants for ~10 Rainer Arnhold spots. Direct application also possible but referral is strongly preferred.\n- 10/31/2026 (annual pattern; confirm at mulagofoundation.org)\n- Dropped in last time", "link": "https://www.mulagofoundation.org/our-fellowships"}, {"id": 9, "name": "EU Funds", "investor": "European Union", "hq": "Belgium", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-fixed", "comment": "may have to  search suitable programs throughout their portal to find the best match for our startup", "link": ""}, {"id": 10, "name": "Health Resilience Community Fund (2024)", "investor": "Health Resilience Community Fund", "hq": "Global", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 11, "name": "IFundWomen", "investor": "IFundWomen", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-rolling", "comment": "application is now open, ticket amount vary with project, normally provide a small grant  ($2.5k - $100K)", "link": ""}, {"id": 12, "name": "Investisseurs & Partenaires - I&P Investment Opportunity (Funding €300,000 to €1,500,000)", "investor": "Investisseurs & Partenaires", "hq": "France", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-rolling", "comment": "Geography is different. Preliminary review of funding applications typically takes 2 to 3 weeks", "link": ""}, {"id": 13, "name": "Justic Funds Collection", "investor": "Justice Funds", "hq": "Global", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 14, "name": "Opportunities for Youth", "investor": "Opportunities for Youth", "hq": "Global", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-fixed", "comment": "may have to  search suitable programs throughout their portal to find the best match for our startup", "link": ""}, {"id": 15, "name": "YC Guide to Seed Fundraising Every Founder needs to read", "investor": "Y Combinator", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Drop", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 16, "name": "Australian Embassy", "investor": "Australian Government (DFAT)", "hq": "Australia", "type": "", "ticket": "Project-wise varies", "geo": "Bangladesh, Southeast Asia", "focus": "Development aid, education, economic resilience", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "Not found any upcomming call for proposal date", "link": ""}, {"id": 17, "name": "AutoDesk Foundation", "investor": "Autodesk Foundation", "hq": "United States", "type": "Loans/Commercial Investment", "ticket": "Around $5 - $10 million", "geo": "Global", "focus": "Renewable Energy, Design Technology, Engineering", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "", "link": "https://autodesk.fluxx.io/apply/investment"}, {"id": 18, "name": "Bain Impact Projects/ Bain Capital Double Impact", "investor": "Bain Capital", "hq": "United States", "type": "Equity", "ticket": "N/A", "geo": "Global", "focus": "Climate & Energy Transition,\nFood Systems & Nature,\nEducation,\nRacial Equity & Social Justice,\nEconomic Development", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "No fixed public deadlines or open application calls exist \nSector different, provide award and TA rather than funding, private deal sourcing and partnership", "link": ""}, {"id": 19, "name": "Benevity Account", "investor": "Benevity", "hq": "Canada", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "Need to check before submission", "link": ""}, {"id": 20, "name": "BRAC (Bangladesh America Maitree Project)", "investor": "BRAC", "hq": "Bangladesh", "type": "Mix-model", "ticket": "Not found", "geo": "Specific Countries including Bangladesh", "focus": "Multiple sectors", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "do not know about this", "link": ""}, {"id": 21, "name": "Danoe Communitits, France", "investor": "Danone Communities", "hq": "France", "type": "Mix-model", "ticket": "€300K to €1M", "geo": "", "focus": "Water, Nuitrition", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "No public submission deadlines exist", "link": ""}, {"id": 22, "name": "DevelopmentAid (Collection of programs)", "investor": "DevelopmentAid", "hq": "Global", "type": "", "ticket": "Project-wise varies", "geo": "Global", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- Project-wise varies\n- proposal portal/hub, not a specific program", "link": ""}, {"id": 23, "name": "Devex (Collection of programs)", "investor": "Devex", "hq": "United States", "type": "", "ticket": "Project-wise varies", "geo": "Global", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- Project-wise varies\n- Consultancy Services for Design, Monitoring and Supervision (DMS):  deadline - 29 October", "link": ""}, {"id": 24, "name": "DFID (Bangladesh) - Department for International Development", "investor": "UK Government (FCDO)", "hq": "United Kingdom", "type": "", "ticket": "", "geo": "Bangladesh", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "not found any proposal", "link": ""}, {"id": 25, "name": "Dovetail", "investor": "Dovetail", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Health, Education, Justice, livelihoods", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "EOI  is closed at this time", "link": ""}, {"id": 26, "name": "Dutch Embassy", "investor": "Dutch Embassy / Netherlands Government", "hq": "Netherlands", "type": "Grant/ Award", "ticket": "", "geo": "Specific partner countries", "focus": "Bilateral cooperation, development aid, social, economic development", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "no link found", "link": ""}, {"id": 27, "name": "Dutch Fund for Climate and Development", "investor": "FMO / SNV / WWF-NL / CFM", "hq": "Netherlands", "type": "Mix-model", "ticket": "Project wise vary", "geo": "Global", "focus": "Climate finance, sustainable development, clean energy, adaptation", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "Rolling basis through the consortium partners (FMO, SNV, WWF-NL, CFM) rather than fixed deadlines", "link": ""}, {"id": 28, "name": "Elemental Impact", "investor": "Elemental Impact", "hq": "United States", "type": "Mix-model", "ticket": "$250K-750K", "geo": "US", "focus": "CleanTech, Water", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- open year-round\n- US and Clean Tech focus. Geography different", "link": "https://elementalimpact.com/funding-opportunities/apply/"}, {"id": 29, "name": "Epic Angels", "investor": "Epic Angels", "hq": "Singapore", "type": "Equity", "ticket": "250K USD per company", "geo": "Asia Pacific", "focus": "Sector agnostic, Female innovator", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "No fixed proposal timelines—submit pitches anytime", "link": ""}, {"id": 30, "name": "European Commission (collection of calls)", "investor": "European Commission", "hq": "Belgium", "type": "", "ticket": "", "geo": "European Union and partner countries", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "no single timelin", "link": ""}, {"id": 31, "name": "Fast Forward", "investor": "Fast Forward", "hq": "United States", "type": "Grant/ Award", "ticket": "up to $25K for Non-profit tech based company", "geo": "Global", "focus": "Social Enterpreneurship, Tech", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- no fixed annual timeline \n- programs run in cohorts over three months", "link": ""}, {"id": 32, "name": "Fund for Bangladesh (collection of proposals)", "investor": "Fund for Bangladesh", "hq": "United States", "type": "", "ticket": "", "geo": "Bangladesh", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "", "link": ""}, {"id": 33, "name": "Global Facility for Disaster Reduction and Recovery (GFDRR)", "investor": "World Bank / GFDRR", "hq": "United States", "type": "Grant/ Award", "ticket": "$300,000–$2M", "geo": "Global", "focus": "Disaster risk management, Resilience building", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- no fixed timeline \n- launch call for proposal by partnering with the World Bank", "link": ""}, {"id": 34, "name": "IWA Global Sanitation Summit 2027 (25 Jan 2027 - 27 Jan 2027)", "investor": "IWA", "hq": "Netherlands", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "", "link": ""}, {"id": 35, "name": "Metlife Foundation", "investor": "MetLife Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "follow", "link": ""}, {"id": 36, "name": "Prime Bank (National)_Female Wash Room at School", "investor": "Prime Bank", "hq": "Bangladesh", "type": "Grant/ Award", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "Retainer model_as team for 1 year , \nPPT\nFinancial", "link": ""}, {"id": 37, "name": "SDC (Swiss Agency for Development Cooperation)", "investor": "Swiss Government (SDC)", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "", "geo": "North Africa & Middle East, Sub-Saharan Africa, Asia, Eastern Europe (focus regions)", "focus": "Poverty alleviation, climate change, migration, health, water, peace, humanitarian aid", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "geography is different", "link": ""}, {"id": 38, "name": "SECO Startup Fund", "investor": "SECO / Swiss Government", "hq": "Switzerland", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "(CHF 300,000 to CHF 1,000,0000 at a concessional interest rate of high single digits)", "link": ""}, {"id": 39, "name": "Skoll (United States)", "investor": "Skoll Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "do not have an absolute budge", "geo": "Global", "focus": "Climate, health/sanitation, equity, governance, racial justice", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- Rolling/nomination-based (typically Oct-Dec sourcing)\n- winner from Bangladesh, No open applications - Invitation-only via network referrals. Submit org profile at skoll.org/apply (leads to nomination process)", "link": ""}, {"id": 40, "name": "Startupxs/ ChangeMakers Seed Grant Opportunity", "investor": "Startupxs", "hq": "Global", "type": "Grant/ Award", "ticket": "not found", "geo": "Global", "focus": "Early-stage startups, social innovation, entrepreneurship, community impact", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "EOI name: City Climate Finance Gap Fund", "link": "https://www.citygapfund.org/wp-content/uploads/2024/11/city-gap-fund-form-en.pdf"}, {"id": 41, "name": "Swiss Embassy", "investor": "Swiss Embassy", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "", "geo": "Global, with strong bilateral focus (Europe, US, Africa, Asia)", "focus": "Sustainability, SDG project funding, export & investment promotion", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "not found any proposal", "link": ""}, {"id": 42, "name": "US Embassy", "investor": "US Embassy / US Government", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Based on country (varies globally)", "focus": "Diplomatic development aid, education, democracy, health", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "", "link": ""}, {"id": 43, "name": "USAID – Development Innovation Ventures", "investor": "USAID", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Health, agriculture, energy, technology innovation", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "operation is closed", "link": ""}, {"id": 44, "name": "Holcim Foundation Awards", "investor": "Holcim Foundation", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "USD 200,000 per region ($50K per person)", "geo": "Global", "focus": "Social Impact, Sustainable Construction Innovation", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- biennial cycle\n- Awards Ceremony in Venice, Italy, on 20 November 2025", "link": ""}, {"id": 45, "name": "BNDP 2nd Line of Leadership Program", "investor": "The Bridgespan Group", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- A three-month online program by The Bridgespan Group, Last applied on 2023 and got accepted", "link": ""}, {"id": 46, "name": "Stanford Seed Spark Program", "investor": "Stanford University", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- Last applied on 2024 and got accepted", "link": ""}, {"id": 47, "name": "GSMA Innovation Fund For Accelerated Growth 2024", "investor": "GSMA", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- Got rejection in 2024\n- Ineligible For This Round", "link": ""}, {"id": 48, "name": "Acumen/ Acumen Angels", "investor": "Acumen", "hq": "United States", "type": "Equity", "ticket": "$10K - $100K, undisclosed, pre-seed", "geo": "Asia and Africa", "focus": "Social Enterpreneurship, Healthcare", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Via Acumen Academy cohorts", "link": ""}, {"id": 49, "name": "a2i (Aspire to Innovate)", "investor": "Government of Bangladesh / UNDP", "hq": "Bangladesh", "type": "Grant/ Award", "ticket": "N/A", "geo": "Bangladesh", "focus": "Tech related innovation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "no activity is observed", "link": ""}, {"id": 50, "name": "ADA Venture / Ada Lovelace", "investor": "Ada Ventures", "hq": "United Kingdom", "type": "Equity", "ticket": "£250K - £1 million", "geo": "UK, Northern Europe", "focus": "Climate, Health, Economic Empowerment", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Fund I/II ongoing; UK-focused rounds", "link": ""}, {"id": 51, "name": "Asian Development Bank (ADB)", "investor": "Asian Development Bank", "hq": "Philippines", "type": "Loans/Commercial Investment", "ticket": "Project-wise varies", "geo": "Asia-Pacific", "focus": "Infrastructure, Poverty Reduction, Sustainable Development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Not found any upcomming call for proposal date", "link": ""}, {"id": 52, "name": "BBG Ventures", "investor": "BBG Ventures", "hq": "United States", "type": "Equity", "ticket": "$500,000 – $1.5 million", "geo": "Invest only in US based companies", "focus": "Healthcare Transformation\nThe Work and Learning Revolution\nEconomic Empowerment\nEnergy Resiliency\nVertical AI\nOverlooked Consumers", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "geograpghy is different", "link": ""}, {"id": 53, "name": "Bill & Melinda Gates Foundation (Gates Foundation)", "investor": "Bill & Melinda Gates Foundation", "hq": "United States", "type": "Mix-model", "ticket": "As per project demand (committed amount)", "geo": "Global", "focus": "Health, Gender equality, Global development, Education", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- not specific for RFP, always open for partners \n- We do not make grants outside our funding priorities. Connection must. Last 8 grantee from BD", "link": ""}, {"id": 54, "name": "Biniyog Briddhi", "investor": "Biniyog Briddhi", "hq": "Bangladesh", "type": "Capacity building", "ticket": "$50K-250K for 3 Years (SIINC); non-repayable funding Up to $100K (IMRF)", "geo": "Bangladesh", "focus": "Multiple sectors", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- no call for application\n- IMRF winner: iPage, Reverse Resources, Light of hope; SIINC: Apon bazar, CMED health, iFarmer", "link": ""}, {"id": 55, "name": "BLAST (Bangladesh Legal Aid and Services Trust)", "investor": "BLAST", "hq": "Bangladesh", "type": "Capacity building", "ticket": "20000 BDT for fellowship", "geo": "Bangladesh", "focus": "Health , Justice", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "can not realte with our focus area- no calll for proposal\n- No call for Proposal", "link": ""}, {"id": 56, "name": "Bonbillo LLC", "investor": "Bonbillo LLC", "hq": "United States", "type": "Capacity building", "ticket": "$15K", "geo": "Africa and Asia", "focus": "Multiple sectors", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Priyoshop from BD, 2 week in person bootcamp", "link": ""}, {"id": 57, "name": "CIC (Climate Innovation Challenge)", "investor": "CIC", "hq": "Global", "type": "Capacity building", "ticket": "", "geo": "Global", "focus": "Climate, Agriculture, Power and Transportation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "For students only", "link": ""}, {"id": 58, "name": "Co-Impact", "investor": "Co-Impact", "hq": "United States", "type": "Grant/ Award", "ticket": "N/A", "geo": "Africa, Asia, and Latin America", "focus": "Education, health, and economic opportunity, gender equality", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- No 2026 program launch date is specified\n- specific fund amounts are not publicly disclosed", "link": ""}, {"id": 59, "name": "Comic Relief", "investor": "Comic Relief", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "not disclosed", "geo": "UK, US", "focus": "Poverty, social injustice", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "geography is different,  has no live funding opportunities", "link": ""}, {"id": 60, "name": "DRK Foundation Grant Program by Draper Richards Kaplan Foundation", "investor": "Draper Richards Kaplan Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "$100,000 – $500,000", "geo": "Global", "focus": "Early-stage NGOs and social enterprises", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 61, "name": "ELRHA Innovation Challenge", "investor": "ELRHA", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "£30,000 to £70,000 per project", "geo": "Global", "focus": "Humanitarian innovation", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "Last EOI deadline June 23, 2019", "link": ""}, {"id": 62, "name": "EMK Small Grant", "investor": "EMK Center / US Embassy", "hq": "United States", "type": "Grant/ Award", "ticket": "25,000,00 BDT", "geo": "Asia Pacific", "focus": "Small-scale development, social projects", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "- TBD, Last program deadline was 15 January 2025\n- For NGOs", "link": ""}, {"id": 63, "name": "EU Tenders (collection of eTender)", "investor": "European Union", "hq": "Belgium", "type": "", "ticket": "", "geo": "Bangladesh", "focus": "", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "European eTender like eGP tender", "link": ""}, {"id": 64, "name": "Fleming Fund", "investor": "Fleming Fund / UK Government", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "Project based", "geo": "24 priority low- and middle-income countries in Africa and Asia including Bangladesh", "focus": "Antimicrobial Resistance (AMR) surveillance, Capacity building, One Health approach", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "No open call for new proposals, Last winner ICCDRB, value: £3,200,000, Jan 2024 to Dec 2025", "link": ""}, {"id": 65, "name": "Global Good", "investor": "Global Good", "hq": "United States", "type": "Grant/ Award", "ticket": "project wise vary", "geo": "Global", "focus": "Social innovation, Impact-driven initiatives", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Fully tech based, patent acquisition and licensing deals", "link": ""}, {"id": 66, "name": "Global Grand Challenges (Canada)", "investor": "Grand Challenges Canada", "hq": "Canada", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Breakthrough innovations in health, environment", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 67, "name": "Global Innovation Fund (GIF)", "investor": "Global Innovation Fund", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Emerging economies in Asia, Africa, Latin America", "focus": "Innovative solutions for development challenges", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Last application window closed on 15 January 2025", "link": ""}, {"id": 68, "name": "Global Youth Empowerment Fund", "investor": "Global Youth Empowerment Fund", "hq": "Global", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Youth empowerment, Education, Leadership", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 69, "name": "Google Startup for Sustainable Development", "investor": "Google.org", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Tech startups for sustainable development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 70, "name": "Green Climate Fund", "investor": "Green Climate Fund", "hq": "South Korea", "type": "Mix-model", "ticket": "Varies by programme", "geo": "Global", "focus": "Climate change mitigation/adaptation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 71, "name": "GSMA", "investor": "GSMA", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Mobile connectivity, Digital inclusion", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 72, "name": "GSMA Global Mobile Award", "investor": "GSMA", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Mobile technology for development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 73, "name": "Guidance Public Fund", "investor": "Guidance Public Fund", "hq": "Global", "type": "Grant/ Award", "ticket": "", "geo": "Asia, Africa", "focus": "Sustainable development projects", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 74, "name": "Humanitarian Grand Challenge", "investor": "Grand Challenges Canada / USAID / UKAID", "hq": "Canada", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Humanitarian Solutions, Disaster Relief", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 75, "name": "ICONIQ Impact", "investor": "ICONIQ Impact", "hq": "United States", "type": "Equity", "ticket": "", "geo": "Global", "focus": "Impact Fund", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 76, "name": "IIX (Impact Investment Exchange)", "investor": "IIX", "hq": "Singapore", "type": "Equity", "ticket": "Project-wise varies", "geo": "Southeast Asia", "focus": "Sector agnostic", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- Project-wise varies\n- first need solid connection", "link": ""}, {"id": 77, "name": "ILO", "investor": "International Labour Organization", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Decent Work, Social Justice", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 78, "name": "IWA: Next Generation Sanitation Systems (NGSS) Project", "investor": "IWA", "hq": "Netherlands", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Sanitation Systems Innovation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 79, "name": "JTI", "investor": "JTI (Japan Tobacco International)", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Community Programs, Environment", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 80, "name": "KOICA", "investor": "KOICA", "hq": "South Korea", "type": "Grant/ Award", "ticket": "", "geo": "Developing Countries", "focus": "Economic Growth, Governance, Social Development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 81, "name": "Mama Cash", "investor": "Mama Cash", "hq": "Netherlands", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Women's Rights, Feminist Movements", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 82, "name": "MetLife (Inclusion Plus)", "investor": "MetLife Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Fintech, Financial Inclusion", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "based on local partnership", "link": ""}, {"id": 83, "name": "NORAD (Norwegian Agency for Development)", "investor": "NORAD / Norwegian Government", "hq": "Norway", "type": "Grant/ Award", "ticket": "", "geo": "Primarily low-income countries, global", "focus": "Climate change, renewable energy, global health, gender equality, reproductive rights, poverty alleviation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 84, "name": "Nordic Climate Fund", "investor": "Nordic Climate Fund", "hq": "Denmark", "type": "Mix-model", "ticket": "", "geo": "Low-income countries (global south, e.g., Sub-Saharan Africa, Asia)", "focus": "Climate adaptation & mitigation; renewable energy, energy efficiency, water, transport, health, agriculture, forestry, climate resilience", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 85, "name": "O'Shaughnessy Ventures", "investor": "O'Shaughnessy Ventures", "hq": "United States", "type": "Grant/ Award", "ticket": "$100,000 for Fellowship & $10,000 for Grants", "geo": "Global", "focus": "Bold thinkers, innovative builders, or visionary creatives", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "- focus is more innovative and different \n- Deadline: 30 April 2026", "link": "https://forms.osv.llc/fellowships2026"}, {"id": 86, "name": "One Drop (WaterAid)", "investor": "One Drop Foundation", "hq": "Canada", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "WASH", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 87, "name": "P4G Partnerships (apply with with WaterAid)", "investor": "P4G", "hq": "Denmark", "type": "Grant/ Award", "ticket": "", "geo": "Developing countries, global, sub-Saharan Africa, Asia, Latin America", "focus": "Climate mitigation/adaptation, food, water, energy, sustainable cities, circular economy", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 88, "name": "PepsiCo Foundation", "investor": "PepsiCo Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Food security, clean water access, nutrition, community development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 89, "name": "Resilience Innovation through Scaling Entrepreneurship (RISE) Urban Challenge", "investor": "RISE / GSMA", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Low- and middle-income countries, urban focus", "focus": "Urban resilience, climate risk, water security, migration, youth/women resilience, informality in urban settings", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 90, "name": "Rockfeller ( city related)", "investor": "Rockefeller Foundation", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Need to check", "link": ""}, {"id": 91, "name": "Rotary International", "investor": "Rotary International", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Health, education, clean water/sanitation, economic development, peace, disease prevention", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 92, "name": "Sankalp", "investor": "Sankalp Forum", "hq": "India", "type": "Mix-model", "ticket": "$100K - $1M USD", "geo": "Global South, Emerging Markets, India, Africa", "focus": "Healthcare, water & sanitation, fintech, gender, future of work, impact investing, agriculture, climate finance, circular economy", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "Bhumijo was Finalist in 2023 (Sankalp Dhaka Awards)", "link": ""}, {"id": 93, "name": "Schwab Foundation", "investor": "Schwab Foundation / World Economic Forum", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "Not found", "geo": "Global", "focus": "Social entrepreneurship, social innovation, impact-driven projects, inclusive economies", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- need connection first\n- Not found", "link": ""}, {"id": 94, "name": "SDG Digital Game Changer Award", "investor": "SDG Digital", "hq": "Global", "type": "Grant/ Award", "ticket": "Only recognition", "geo": "Global", "focus": "Digital technology solutions advancing the UN SDGs", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "- need connection first, last call ended on 11 August 2024\n- Dead-line July each year", "link": ""}, {"id": 95, "name": "SGDx", "investor": "SGDx", "hq": "Singapore", "type": "", "ticket": "", "geo": "Asia", "focus": "Cleantech, Wash", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 96, "name": "SHF – The Sanitation and Hygiene Fund", "investor": "Sanitation and Hygiene Fund", "hq": "Global", "type": "", "ticket": "", "geo": "Africa and Asia", "focus": "Sanitation economy development, hygiene, menstrual health, gender equity, socio-economic and health returns", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 97, "name": "SIDA / Swedish Embassy (Swedish International Development Cooperation Agency)", "investor": "SIDA / Swedish Government", "hq": "Sweden", "type": "Mix-model", "ticket": "", "geo": "Developing countries in UNECE region and globally, focus on Sweden's international development priorities", "focus": "Poverty reduction, sustainable development, private sector development, democracy, equality, health, economic and social development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 98, "name": "SNV", "investor": "SNV Netherlands Development Organisation", "hq": "Netherlands", "type": "Grant/ Award", "ticket": "Project-wise varies", "geo": "Africa, Asia, Latin America, Balkans", "focus": "Agriculture, energy, water, sanitation, sustainable development, local capacity-building", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "No proposal available now", "link": ""}, {"id": 99, "name": "SoGal Ventures", "investor": "SoGal Ventures", "hq": "United States", "type": "Equity", "ticket": "", "geo": "Global", "focus": "Wellness, Womens", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 100, "name": "Spider", "investor": "Spider Center", "hq": "Sweden", "type": "Mix-model", "ticket": "", "geo": "US, global (major partnerships)", "focus": "Endowments, long-term capital preservation, foundations, alternative investments", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 101, "name": "Springbank", "investor": "Springbank", "hq": "United States", "type": "Equity", "ticket": "", "geo": "Global", "focus": "Health care, Wellness industries", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 102, "name": "Starbucks Foundation", "investor": "Starbucks Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global, US, Latin America, Africa, Asia", "focus": "Community development, women empowerment, youth, disaster response, sustainable agriculture", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 103, "name": "Startup Bangladesh Ltd", "investor": "Startup Bangladesh Ltd", "hq": "Bangladesh", "type": "Equity", "ticket": "", "geo": "Bangladesh", "focus": "Logistic, Supplychain, Agri-Tech, Ecommerce/Retail", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 104, "name": "StartUs Insights", "investor": "StartUs Insights", "hq": "Austria", "type": "Mix-model", "ticket": "", "geo": "Global (Europe focus)", "focus": "Startup ecosystem, innovation, market insights, funding for scalable impact startups", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "geography is different", "link": ""}, {"id": 105, "name": "Tech4framers", "investor": "Tech4Farmers", "hq": "Global", "type": "Grant/ Award", "ticket": "", "geo": "Global, with rural farming communities focus", "focus": "Agricultural technology, digital tools for farmers, rural development, innovation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "not available link", "link": ""}, {"id": 106, "name": "The BICESTER COLLECTION", "investor": "Bicester Collection", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "UK-centric but international collaborations", "focus": "Arts, culture, heritage preservation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 107, "name": "Toilet Board Coalition (TBC)", "investor": "Toilet Board Coalition", "hq": "Switzerland", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "WASH: Sanitation, hygiene, market development, investment facilitation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 108, "name": "Transform", "investor": "FCDO / EY / Unilever (Transform)", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Urban innovation, sustainable development, social impact", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "no running proposal", "link": ""}, {"id": 109, "name": "UN General", "investor": "United Nations", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Global development, humanitarian aid, peace, health, environment", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 110, "name": "UN-Habitat Scroll of Honour Award", "investor": "UN-Habitat", "hq": "Kenya", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Urban development, sustainable cities, housing", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 111, "name": "UNDP (United Nations Development Programme)", "investor": "UNDP", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Poverty reduction, climate resilience, governance, sustainable development", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 112, "name": "UNESCAP Women Enterprise Impact Investment Fund", "investor": "UN ESCAP", "hq": "Thailand", "type": "Mix-model", "ticket": "Up to US$ 1.3 million", "geo": "Asia-Pacific", "focus": "Women entrepreneurship, economic empowerment", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "but only for non-profit", "link": ""}, {"id": 113, "name": "UNICEF Call for Innovative WASH Solutions", "investor": "UNICEF", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Water, sanitation, hygiene innovation", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 114, "name": "Unilever", "investor": "Unilever Foundation", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Sustainability, health & nutrition, environmental stewardship", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 115, "name": "United Nations Capital Development Fund (UNCDF)", "investor": "UNCDF", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "Asia, Europe, and Africa.", "focus": "Women's, energy, and financial services industries", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 116, "name": "Unleash Innovation Lab", "investor": "UNLEASH", "hq": "Denmark", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Youth innovation, SDGs, technology, social impact", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "no running proposal", "link": ""}, {"id": 117, "name": "Upaya Social Ventures", "investor": "Upaya Social Ventures", "hq": "United States", "type": "Mix-model", "ticket": "", "geo": "Southeast Asia", "focus": "Employment, Social, Social Enterpreneurship", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 118, "name": "Venture Capital for Social Enterprises (VCSE) Health & Wellbeing Fund", "investor": "VCSE", "hq": "United Kingdom", "type": "Equity", "ticket": "", "geo": "Global, focus on emerging markets", "focus": "Health, wellbeing, social enterprises", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 119, "name": "Vitol Foundation", "investor": "Vitol Foundation", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global", "focus": "Climate action, humanitarian aid, health, education", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 120, "name": "Water.org", "investor": "Water.org", "hq": "United States", "type": "Mix-model", "ticket": "", "geo": "Global", "focus": "Water and sanitation access, finance solutions", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "no running proposal", "link": ""}, {"id": 121, "name": "WaterAid", "investor": "WaterAid", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "", "geo": "Global, with focus on developing countries", "focus": "Water, sanitation, hygiene (WASH), health", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "", "link": ""}, {"id": 122, "name": "Wavemaker Impact", "investor": "Wavemaker Impact", "hq": "Singapore", "type": "Equity", "ticket": "", "geo": "Southeast Asia", "focus": "Climate-tech, Agtech, Agriculture", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "no public call for proposals", "link": ""}, {"id": 123, "name": "WSA Award", "investor": "WSA - World Summit on the Information Society", "hq": "Austria", "type": "Grant/ Award", "ticket": "https://wsa-global.org/contest/", "geo": "Global", "focus": "Social entrepreneurship, innovation across multiple sectors", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "convince your National Expert, BD no longer looking for nominees", "link": ""}, {"id": 124, "name": "Hong Kong Green Carbonless Challenge", "investor": "Carbonless Asia", "hq": "Hong Kong", "type": "", "ticket": "", "geo": "Hong Kong Green Carbonless Challenge (by Carbonless Asia)", "focus": "", "closing": null, "status": "", "result": "", "cls": "suggested-rolling", "comment": "09072026: Permanent Drop — zero fit for Bhumijo. Program is exclusively for green building/construction decarbonisation technology deployable inside Hong Kong real estate portfolios. \n- Bhumijo operates urban public sanitation in Bangladesh. Geography wrong, sector wrong, structure wrong. No scenario exists where this becomes relevant. Remove from active tracker entirely. \n- Also dropped in last time", "link": "https://drive.google.com/drive/folders/1jd-L_VZsfKS_1uwh4f9vOQ8kVfv7hnGz?usp=drive_link"}, {"id": 125, "name": "GCA Local Adaptation Champions Awards 2026", "investor": "Global Center on Adaptation", "hq": "Netherlands", "type": "Grant/ Award", "ticket": "EUR €15,000 per category winner (4 winners, one per category) + COP ceremony visibility + 1-year GCA network support + global media coverage as top-20 nominee", "geo": "Global", "focus": "FocusLocally led climate adaptation & resilience — 4 categories: Water Security, Food Security, Urban Adaptation Solutions, Local Entrepreneurship; for-profit MSMEs explicitly welcome under Local Entrepreneurship category", "closing": null, "status": "", "result": "Follow-up", "cls": "suggested-fixed", "comment": "- 09072026: Strong fit — apply immediately when 2026 call opens. Do not wait. Two ideal categories: \n(1) Local Entrepreneurship — explicitly for MSMEs and women-led businesses with climate adaptation business models; for-profit eligible; Bhumijo fits perfectly. \n(2) Urban Adaptation Solutions — Dhaka urban poor, climate-resilient hygiene infrastructure, community-embedded. Bangladesh government representative on Technical Advisory Group is an additional advantage. \nAction needed NOW: Email Anju Sharma (anju.sharma@gca.org) — GCA Global Lead on Locally Led Adaptation — to get advance notice of 2026 call launch. 2025 call ran only 30 days (Jun 6–Jul 6); 2026 window may be equally short.\n- JVA is possible\n- Rejected in 2025", "link": "https://drive.google.com/drive/folders/1A048wGe4FTfqMINSWRKetl8jRRMF1dNu?usp=drive_link"}, {"id": 126, "name": "Leading Cities — QBE AcceliCITY Resilience Challenge", "investor": "QBE Insurance / Leading Cities", "hq": "United States", "type": "Mix-model", "ticket": "$25,000 per division winner + $100,000 grand prize + $150,000 in city pilot opportunities", "geo": "Global", "focus": "Smart city, govtech, climate, infrastructure, or urban innovation startups; MVP or later stage; ability to pilot with cities or enterprises; scalable solution with real-world use cases", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "-11072026: Pipeline — apply in Q1 2027 round. 2026 deadline already passed. Strong fit: Bhumijo's Smart Dashboard, Odor Sensor, Digital Entry Gate, and Facility App position it as a genuine urban tech/smart city solution. Apply under AcceliCITY East division. Frame as smart sanitation monitoring platform deployable in city facilities. \nImmediate action: Join LaunchPad 11 ecosystem now at leadingcities.org — free membership builds credibility and early access for 2027 round. \nJVA: Not applicable — solo startup applications only", "link": "https://share.hsforms.com/1IBqojX5SSsyKB8u9v67XQA1zso9"}, {"id": 127, "name": "Unifor Social Justice Fund (SJF)", "investor": "Unifor", "hq": "Canada", "type": "Grant/ Award", "ticket": "Not publicly disclosed — project-based; historically small-to-mid grants for NGO projects", "geo": "", "focus": "Global", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "-11072026: bi-annual open call suspended since 2025; Drop — two unfixable barriers. \n(1) Open call suspended since 2025; no competitive application process currently available — donation requests only via email. \n(2) Exclusively funds NGOs, community organizations, and trade unions; Bhumijo is a for-profit social enterprise. \n- JVA is not viable", "link": "https://drive.google.com/drive/folders/1ibf-k3pFZKumPiP_WP_QHG-37CJb0Sdb?usp=drive_link"}, {"id": 128, "name": "Coalition for Sustainable Development through Sport (GSIF)", "investor": "GSIF", "hq": "Belgium", "type": "Mix-model", "ticket": "EUR €500,000 – EUR €5,000,000 per project", "geo": "Global", "focus": "Sport-for-development projects exclusively — inclusive sports facilities, coaching academies, multi-purpose sport hubs, sport-driven behavioral change; must have credible revenue-generation model; grant-only models not eligible", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "-13072026: Not Available at that time\n- Permanent Drop — fundamental thematic mismatch. GSIF exclusively finances sport-for-development initiatives. EOI deadline also already passed (Sep 30, 2025). \nJVA: Not possible — even with a sports federation as Lead, Bhumijo's sanitation work cannot be framed as sport-for-development. No future cycle will change this thematic barrier. \n- EOI closed September 30, 2025; 2026 round not yet announced", "link": "https://drive.google.com/drive/folders/15PInBlY7X5ESAHGOZEbWCOZyu4Z9zHPq"}, {"id": 129, "name": "Innovations Against Poverty (IAP) — SNV / SIDA", "investor": "SNV / SIDA", "hq": "Netherlands / Sweden", "type": "Mix-model", "ticket": "€50,000 – €200,000 matching grant (max 49% of total project cost; applicant must co-invest minimum 51%)", "geo": "Bangladesh exclusively for current window; also Cambodia, Ethiopia, Uganda, Zambia in other windows", "focus": "Inclusive innovative businesses serving base-of-pyramid customers — Water & Sanitation, Clean Energy, Food Security, Climate Resilience, Digital Inclusion; \"missing middle\" SMEs; strong emphasis on women's economic empowerment and environmental sustainability", "closing": null, "status": "", "result": "", "cls": "suggested-fixed", "comment": "- 13072026: Current round closed Sep 15, 2025; next Bangladesh round expected mid-2026 to early-2027\n- Strong fit — pipeline for next round. One of the best-matched programs for Bhumijo: Bangladesh-specific, for-profit eligible, WASH explicitly in scope, \"missing middle\" SME focus, women's empowerment emphasis, post-pilot revenue-generating businesses prioritised. Current round closed Sep 15, 2025. Action needed now: Contact Ahmed Moosa (amoosa@snv.org / +880 14 0247 3610) to register interest for next Bangladesh call and get advance notice. Prepare co-investment evidence (51% of project cost in cash or in-kind). \nJVA: Not required — Bhumijo applies directly as lead; no JV structure needed.", "link": "https://innovationsagainstpoverty.org/application-process/"}, {"id": 130, "name": "Aqua for All — SIINC for WASH", "investor": "Aqua for All", "hq": "Netherlands", "type": "Loans", "ticket": "$250K - $500K || EUR 150K-350K", "geo": "Africa, Asia", "focus": "Water, Sanitation, Sustainable Infrastructure", "closing": null, "status": "Rolling", "result": "", "cls": "rolling", "comment": "- Repayable investment, High interest rate\n- Previous year: 8-sep-2025 to 2-nov-2025", "link": ""}, {"id": 131, "name": "FM Kirby prize", "investor": "FM Kirby Foundation", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-01-09", "status": "", "result": "", "cls": "fixed", "comment": "", "link": ""}, {"id": 132, "name": "Alumni Engagement Innovation Fund (AEIF) 2025", "investor": "US Department of State", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-01-14", "status": "", "result": "", "cls": "fixed", "comment": "Application period: October-November and February-March", "link": ""}, {"id": 133, "name": "Academy for Women Entrepreneurs (AWE) 2025", "investor": "US Department of State", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-01-15", "status": "", "result": "", "cls": "fixed", "comment": "For-profit entities, even those that may fall into the categories listed above, are not eligible to apply for this NOFO.  Organizations may sub-contract with other entities, but only one, non-profit, non-governmental entity can be the prime recipient of the award.", "link": ""}, {"id": 134, "name": "Future Action Summit 2026", "investor": "Future Action Summit", "hq": "Global", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-01-18", "status": "Submitted", "result": "Rejected", "cls": "fixed", "comment": "", "link": "https://docs.google.com/document/d/1tbxOfAKSvbt6bU9M4SmOnA5qEZYkmit9s4vEbCvOtjU/edit?tab=t.0"}, {"id": 135, "name": "IKI by GIZ", "investor": "GIZ / German Government", "hq": "Germany", "type": "Grant/ Award", "ticket": "Large: 5 to 20 million euros\nMedium: 300,000 to 800,000 euros \nSmall: EUR 60,000 and 200,000", "geo": "Global", "focus": "Climate Change Mitigation and Adaptation", "closing": "2026-01-31", "status": "", "result": "", "cls": "fixed", "comment": "Deadlines: \nLarge: 17 feb 2026\nMedium: 20 Jan 2026 \nSmall: 15 Jan 2026", "link": "https://www.international-climate-initiative.com/en/find-funding/"}, {"id": 136, "name": "DANIDA", "investor": "Danish Government", "hq": "Denmark", "type": "Mix-model", "ticket": "$1.45 million per project (start from April 2027)", "geo": "Africa, Asia, Latin America, Middle East, Europe", "focus": "Multiple sectors", "closing": "2026-02-01", "status": "", "result": "", "cls": "fixed", "comment": "Phase 1 (concept notes) closed February 5, 2026, at 13:00 CET", "link": "https://dfcentre.smapply.io/prog/call_for_research_applications_2026/"}, {"id": 137, "name": "Bellagio Center Residency Program (Rockefeller Foundation)", "investor": "Rockefeller Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "", "geo": "United States and around the world", "focus": "Health, Food, Power, U.S. Economic Opportunity Innovation, Innovative Finance", "closing": "2026-03-01", "status": "Drop", "result": "", "cls": "fixed", "comment": "- Applications for the 2027 Bellagio Center\n- Residency Program are now closed. \n- March 3 to March 19, 2026", "link": "https://www.rockefellerfoundation.org/fellowships-convenings/bellagio-center/residency-program/"}, {"id": 138, "name": "World Water Week", "investor": "SIWI", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-03-05", "status": "Drop", "result": "", "cls": "fixed", "comment": "We will start work on this proposal before 2 months prior.  Target to apply for 2027", "link": ""}, {"id": 139, "name": "The Mobile World Capital Awards by GSMA", "investor": "GSMA", "hq": "United Kingdom", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-03-17", "status": "Drop", "result": "", "cls": "fixed", "comment": "up to €50,000 to pilot", "link": ""}, {"id": 140, "name": "Stockholm Water Week", "investor": "SIWI", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-03-20", "status": "Drop", "result": "", "cls": "fixed", "comment": "did not apply, (Networking part has date to apply: Exhibition, side events and closed meeting)", "link": ""}, {"id": 141, "name": "UN-Water conference 2026", "investor": "UN-Water", "hq": "Switzerland", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-03-21", "status": "Drop", "result": "", "cls": "fixed", "comment": "", "link": ""}, {"id": 142, "name": "The GSMA Innovation Fund for Impactful AI", "investor": "GSMA", "hq": "United Kingdom", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-03-21", "status": "Drop", "result": "", "cls": "fixed", "comment": "Declined and Rejected in 2025", "link": "https://docs.google.com/document/d/1fHVTRppfNeeoEVuL3mXjzoGjX3EfcvW0YhohU5UiL9k/edit?tab=t.cwaxkcjs1kza"}, {"id": 143, "name": "Swedish Institute Global Executive Programme 2026", "investor": "Swedish Institute", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-03-25", "status": "Submitted", "result": "Rejected", "cls": "fixed", "comment": "Last submission date 25 March 2026, and got rejected", "link": "https://drive.google.com/drive/folders/1gCdnEc7ncD40dhZ-RtmFhpjyhGELhnA9"}, {"id": 144, "name": "Common Fund for Commodities", "investor": "Common Fund for Commodities", "hq": "Netherlands", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-04-01", "status": "Drop", "result": "", "cls": "fixed", "comment": "may apply in 27th call  (next year)", "link": ""}, {"id": 145, "name": "The 2025 Global Challenge #GC2025", "investor": "Global Challenges Foundation", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-04-19", "status": "Drop", "result": "", "cls": "fixed", "comment": "", "link": ""}, {"id": 146, "name": "Call for Innovative WASH Solutions", "investor": "UNICEF", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-04-30", "status": "", "result": "", "cls": "fixed", "comment": "- Last applied on 2025 and got rejected", "link": "https://docs.google.com/document/d/1lVpLPvZIefTAWEIx-7rT_nKhUlB7Mn8c5ZkCzDkMTvQ/edit?tab=t.0"}, {"id": 147, "name": "UN-Habitat Scroll of Honour Award 2025", "investor": "UN-Habitat", "hq": "Kenya", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-04-30", "status": "", "result": "", "cls": "fixed", "comment": "- Last applied on 2025 and got rejected", "link": "https://docs.google.com/document/d/1szmKpvXP-MChzpKG2oRhV9TtpWYKJZ_XJy2WWc5E5Ko/edit?tab=t.0"}, {"id": 148, "name": "MIT Solve", "investor": "Massachusetts Institute of Technology", "hq": "United States", "type": "Grant/ Award", "ticket": "$100K+ prize (plus up to $150K AI prize)", "geo": "Global", "focus": "Climate, Economic Prosperity, Health, Learning, Indigenous Communities, Youth Innovation, Innovative Financing", "closing": "2026-05-01", "status": "Drop", "result": "", "cls": "fixed", "comment": "Deadline: 21 May 2026", "link": ""}, {"id": 149, "name": "KTH Innovation Award (SEK 500K/ USD 47K)", "investor": "KTH Royal Institute of Technology", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-05-15", "status": "Drop", "result": "", "cls": "fixed", "comment": "Rejected on 2024", "link": "https://drive.google.com/drive/folders/1NTyKF-KX9P4uI60cLSvShQUsLZjeAJsk?usp=drive_link"}, {"id": 150, "name": "Tällberg-SNF-Eliasson", "investor": "Tällberg Foundation", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-05-15", "status": "Drop", "result": "", "cls": "fixed", "comment": "Rejected? realy Have we applied", "link": ""}, {"id": 151, "name": "Displaced Livelihoods Initiative (DLI) Grants 2026", "investor": "IKEA Foundation / IPA / J-PAL", "hq": "Sweden", "type": "Grant/ Award", "ticket": "Up to $250K", "geo": "Global — LMICs priority; Africa, Asia, Latin America, MENA", "focus": "Rigorous research and practical solutions improving economic livelihoods of displaced/refugee populations and host communities — funded by IKEA Foundation, implemented by IPA and J-PAL; refugee-led organizations and researchers with lived displacement experience strongly prioritised", "closing": "2026-05-15", "status": "", "result": "", "cls": "fixed", "comment": "", "link": "https://opportunitiesforyouth.org/2026/04/22/dli-grants/"}, {"id": 152, "name": "UNICEF Venture Fund", "investor": "UNICEF", "hq": "United States", "type": "Grant/ Award", "ticket": "Up to $100K (equity-free)", "geo": "Global", "focus": "Climate and Health Tech", "closing": "2026-05-17", "status": "Submitted", "result": "Follow-up", "cls": "fixed", "comment": "Last submission date 17 May 2026, and got     , After Month 2-3, they will call for RFP\n- Last time we proposed below $100K, got rejected in 2025", "link": "https://form.jotform.com/260711626703351"}, {"id": 153, "name": "THRIVE Global Impact Challenge", "investor": "THRIVE", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-05-25", "status": "Drop", "result": "", "cls": "fixed", "comment": "do not match with our focus area", "link": ""}, {"id": 154, "name": "SDG Action Award", "investor": "UN SDG Action Campaign", "hq": "Germany", "type": "Grant/ Award", "ticket": "Only recognition", "geo": "Global", "focus": "Initiatives advancing the UN Sustainable Development Goals (SDGs) through citizen engagement and impact", "closing": "2026-06-01", "status": "Submitted", "result": "Follow-up", "cls": "fixed", "comment": "- Dead-line May each year\n- Last submission date 1 June 2026, and got", "link": "https://sdgaction.smapply.io/prog/heroes_of_tomorrow_un_sdg_action_awards_2026_creativity_resilience_application_form/"}, {"id": 155, "name": "GIZ Include project 2025", "investor": "GIZ / German Government", "hq": "Germany", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-06-04", "status": "", "result": "", "cls": "fixed", "comment": "Short-Listed, rejected in 2025", "link": "https://drive.google.com/drive/folders/1ZeG8bl2OfazBjuwjY2uz98GTWT5v37iD"}, {"id": 156, "name": "Cartier Women’s Initiative", "investor": "Unknown Funder", "hq": "Global", "type": "Grant/ Award", "ticket": "$100,000 (1st), $60,000 (2nd), $30,000 (3rd)", "geo": "Global", "focus": "Multiple sectors", "closing": "2026-06-16", "status": "Submitted", "result": "Follow-up", "cls": "fixed", "comment": "- Last submission date 16 June 2026, and got \n-  April 16 to June 16, 2026", "link": "https://accounts.submittable.com/u/login/password?state=hqFo2SBqNW1QVlpfYkZTbE0zenFTeGFlWmtuSXBUcmdCYkR4M6Fur3VuaXZlcnNhbC1sb2dpbqN0aWTZIEdheVRHTXI3d2x2aWJRYWtkd1EyZkFNMDhkRTE4R0tIo2NpZNkgRmZpZ1l1TFp1VFVQdkNKQktxWlBOcHIzMzBtRk1lM3Olb3JnaWS0b3JnX2RRWXdDTUNubkVLWURENzanb3JnbmFtZdksZ21zLWNhNDE5NDFkLTAyY2YtNDgxOC1hNGE2LTQ5OGQyNjRmYTUxMi1lbXA"}, {"id": 157, "name": "Waislitz Global Award 100K", "investor": "Waislitz Foundation", "hq": "Australia", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-06-21", "status": "Drop", "result": "", "cls": "fixed", "comment": "Accepted in 2024, dropped in 2025, 2026", "link": "https://drive.google.com/drive/folders/1dlqxuN2h444BJATZAsYMaQjIV7Qva4V1?usp=drive_link"}, {"id": 158, "name": "Zayed Sustainability Award", "investor": "UAE Government / Expo City Dubai", "hq": "United Arab Emirates", "type": "Grant/ Award", "ticket": "USD 1M", "geo": "Global", "focus": "Sustainability, environmental protection, innovation", "closing": "2026-06-22", "status": "Submitted", "result": "Follow-up", "cls": "fixed", "comment": "- Last submission date 22 June 2025, 22 June 2024, and got two times rejection\n- January 26 to June 22, 2026", "link": "https://entry.zayedsustainabilityprize.com/"}, {"id": 159, "name": "DBS Foundation Grant", "investor": "DBS Bank Foundation", "hq": "Singapore", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-06-30", "status": "Drop", "result": "", "cls": "fixed", "comment": "Businesses must be registered and operating in one of the 6 markets that DBS operates in: Singapore, China, Hong Kong, India, Indonesia or Taiwan, not applicable, Dropped in last time", "link": "https://drive.google.com/drive/folders/1QeWCq7b92KsadR1w0iSOgZAmnOrmyhdR"}, {"id": 160, "name": "The Global Good Fund Fellowship 2026", "investor": "Global Good Fund", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-06-30", "status": "Drop", "result": "", "cls": "fixed", "comment": "Dropped in last time", "link": ""}, {"id": 161, "name": "100 Meaningful Business", "investor": "100 Meaningful Business", "hq": "Global", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-07-01", "status": "", "result": "", "cls": "fixed", "comment": "Accepted in 2024", "link": "https://drive.google.com/drive/folders/1YSC899_fIlvUiUK20wjOeNDJ7u53mJA-?usp=drive_link"}, {"id": 162, "name": "100+ Accelerator (Cohort 8)", "investor": "AB InBev / Coca-Cola / Colgate / Danone / Unilever", "hq": "United States", "type": "Grant/ Award", "ticket": "Up to USD $100,000 per startup (pilot funding), 6 month Mentorship, Equity Free", "geo": "Global", "focus": "Water Stewardship, Sustainable Agriculture, Circular Economy, Climate Action, Inclusive Growth, Better Packaging, Supply Chain Excellence — solutions piloted inside corporate partner supply chains (AB InBev, Coca-Cola, Colgate-Palmolive, Danone, Mondelēz, Unilever)", "closing": "2026-07-10", "status": "Drop", "result": "", "cls": "fixed", "comment": "- 09072026: Drop — poor fit for Bhumijo. Program requires piloting solutions inside corporate supply chains. Bhumijo's urban sanitation model doesn't connect to any partner's operations. Advertising/brand partnership idea is valid but must be pursued as a direct CSR deal outside this program. Revisit Cohort 9 (~Jun 2027) only if a deployable hygiene tech product is developed. \n- JVA is not possible", "link": "https://www.f6s.com/100-accelerator-cohort-8-applications/apply"}, {"id": 163, "name": "RELX Environmental Challenge 2026", "investor": "RELX Group", "hq": "United Kingdom", "type": "Grant/ Award", "ticket": "$75,000 cash, no equity", "geo": "Global", "focus": "Open for 2 prizes: a clean water/sanitation prize and a new ocean prize", "closing": "2026-07-12", "status": "Submitted", "result": "Follow-up", "cls": "fixed", "comment": "-14072026: Early stage projects are preferred.", "link": "https://relxenvironmentalchallenge.awardsplatform.com/"}, {"id": 164, "name": "Zendesk Tech for Good Impact Awards 2026", "investor": "Zendesk", "hq": "United States", "type": "Grant/ Award", "ticket": "Up to USD $50,000 cash grant + free Zendesk AI software access", "geo": "Global", "focus": "Fostering community; Promoting resilience in crisis; Creating tech career pathways — nonprofits using Zendesk to serve beneficiary communities", "closing": "2026-07-15", "status": "Drop", "result": "Follow-up", "cls": "fixed", "comment": "- 09072026: Bhumijo is a for-profit social enterprise; program requires verified nonprofit/charitable status. If Bhumijo registers a nonprofit arm or foundation in future, this is a strong fit under \"Fostering community\" focus area. Re-evaluate if legal structure changes. \n- Dropped in last time.\n- may apply as JV (need to confirm via email)", "link": "https://drive.google.com/drive/folders/1Hts7ie9ja668RxT9YTDCL_5HzCYsgSVp?usp=drive_link"}, {"id": 165, "name": "Earthna Prize 2026", "investor": "Earthna Center", "hq": "Qatar", "type": "Grant/ Award", "ticket": "USD $250,000 per winner (4 winners from $1M prize pool)", "geo": "Global", "focus": "Water systems\nBuilt environments\nFood systems\nTerrestrial ecosystems\nMarine and Coastal ecosystems", "closing": "2026-07-20", "status": "", "result": "", "cls": "fixed", "comment": "- 09072026: poor thematic fit. Prize is exclusively for traditional/indigenous knowledge-based solutions. Bhumijo is a modern tech-enabled urban enterprise. A \"traditional community hygiene practices revived by technology\" framing is possible but unlikely to be competitive against genuinely indigenous-knowledge-rooted applicants. \n- JVA is not possible", "link": "https://prize-portal.earthna.qa/signup/individual"}, {"id": 166, "name": "Bloomberg Initiative for Cycling Infrastructure (BICI) Phase 2", "investor": "Bloomberg Philanthropies", "hq": "United States", "type": "Grant/ Award", "ticket": "Phase 1: capacity building for 25 cities; \nPhase 2: USD $400,000 per winning city (10 cities) + GDCI technical assistance", "geo": "Global — all cities with 100,000+ residents eligibl", "focus": "Safe cycling infrastructure — protected bike lanes, connected cycling networks, street redesign, sustainable urban mobility; city governments must lead; collaboration and innovation strongly favoured; \"lighthouse cities\" using smart technology welcome", "closing": "2026-09-14", "status": "Drop", "result": "", "cls": "fixed", "comment": "-15072026: Dropped due to lack of lead applicant (need a elected mayor)\n-11072026: Conditional Pipeline — DNCC must Lead; Bhumijo as Planning & Design partner only. \nCritical condition: project must be primarily cycling infrastructure — Pursue only if DNCC has genuine cycling infrastructure plans for Dhaka. \nJVA: Possible but limited — Bhumijo as sub-partner in planning/design capacity only", "link": "https://biciapplicationsphase2.evalato.com/"}, {"id": 167, "name": "iDEA Project Impact Collection", "investor": "iDEA", "hq": "United Kingdom", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-10-16", "status": "", "result": "", "cls": "fixed", "comment": "- Got Rejected in last time", "link": "https://docs.google.com/forms/d/1nW8Kta-FHGnNXA5tEmBGrYZqtws2lEJdODdUP6Y1z38/viewform?edit_requested=true"}, {"id": 168, "name": "GIZ Indulge project 2026", "investor": "GIZ / German Government", "hq": "Germany", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-10-30", "status": "", "result": "", "cls": "fixed", "comment": "Rejected in GIZ Indulge project 2024", "link": ""}, {"id": 169, "name": "Aqua for all/ roots of impact/ SINC", "investor": "Aqua for All / Roots of Impact", "hq": "Netherlands", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-11-02", "status": "", "result": "", "cls": "fixed", "comment": "Checked, (EUR 150K-350K)", "link": ""}, {"id": 170, "name": "Expo City Foundation Dubai", "investor": "Expo City Foundation", "hq": "United Arab Emirates", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-11-23", "status": "", "result": "", "cls": "fixed", "comment": "Climate change: addressing extreme heat,  20 startsups, $100K /per startup", "link": "https://docs.google.com/document/d/1By6wAHPvHWAj7l5PC9eiFn0MWja802y1czNN2kCTcRM/edit?tab=t.0"}, {"id": 171, "name": "UNDP and Global Environment Facility Small Grants Programme (SGP)", "investor": "UNDP / GEF", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-11-25", "status": "", "result": "", "cls": "fixed", "comment": "Salman vai may help us.", "link": ""}, {"id": 172, "name": "UNICEF Innovation Fund", "investor": "UNICEF", "hq": "United States", "type": "Grant/ Award", "ticket": "Up to $100K for early stage", "geo": "Global", "focus": "Technology for children’s rights and welfare", "closing": "2026-11-30", "status": "", "result": "", "cls": "fixed", "comment": "no application is open\n- Last App Deadline: 30 Nov 2025", "link": "https://form.jotform.com/251323971624355"}, {"id": 173, "name": "Bangladesh Angels", "investor": "Bangladesh Angels Network", "hq": "Bangladesh", "type": "Grant/ Award", "ticket": "$100-250K", "geo": "Bangladesh", "focus": "Multiple sectors", "closing": "2026-12-01", "status": "", "result": "", "cls": "fixed", "comment": "- we need to send our pitch first, capacity building like TVL. We can apply for our tech. Should see FAQ\n- Last event 6 december 2025", "link": ""}, {"id": 174, "name": "Global Citizen-Cisco Youth Leadership Award", "investor": "Global Citizen / Cisco", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-12-17", "status": "", "result": "", "cls": "fixed", "comment": "Global Citizen (age 18-30th), tech based climate solution, track record of over the last 3-5 years", "link": ""}, {"id": 175, "name": "Bllomberg Global Mayors Challenge 2026", "investor": "Bloomberg Philanthropies", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-12-20", "status": "", "result": "", "cls": "fixed", "comment": "Last Applied in 2025 and got rejected", "link": "https://drive.google.com/drive/folders/1pnie-ZXlFmCAktL0J5SzHyshh_pmTEpm"}, {"id": 176, "name": "Global Citizen Awards", "investor": "Global Citizen", "hq": "United States", "type": "Grant/ Award", "ticket": "$100K per category", "geo": "Global", "focus": "Social impact, Development projects", "closing": "2026-12-30", "status": "", "result": "", "cls": "fixed", "comment": "maximum programs are closed now. Dysmus Kisilu winner of: Waislitz ($100K), and Citizen Prize ($10K).\n1. Cisco Youth Leadership Award ($250K, Dec 2025)\n2. PayPal Small Business Impact Awards ($25K, Aug 2025)\n3. Forecasting the Future Challenge (Aug 2025) \n4. Global Citizen Prize (Main, $10K, Nov 2026)\n5. Global Citizen Fellowship Program (only for Africa)\n6. Waislitz ($100K, Open till 14 June)\n7. Young Artists Collective (mentorship & exposure)\n8. Youth Leaders Award  ($5K, Oct 2023)\n- Bhumijo received Waislitz Gobal Citizen Award on Public Choice Category in 2024", "link": ""}, {"id": 177, "name": "KTH: Nominate for Alum of the Year 2026", "investor": "KTH Royal Institute of Technology", "hq": "Sweden", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2026-12-30", "status": "", "result": "", "cls": "fixed", "comment": "Last Applied in 2024 and got rejected", "link": ""}, {"id": 178, "name": "Win Win Gothenburg Sustainability Award", "investor": "City of Gothenburg / WIN WIN", "hq": "Sweden", "type": "Grant/ Award", "ticket": "WIN WIN Award - 1 million SEK", "geo": "Global", "focus": "GENDER EQUALITY", "closing": "2027-01-01", "status": "", "result": "", "cls": "fixed", "comment": "- will apply in November 2026\n- Nominations for the 2026 award closed on January 11th 2026.", "link": ""}, {"id": 179, "name": "UN Global Impact: Young SDG Innovators", "investor": "UN Global Compact", "hq": "United States", "type": "Grant/ Award", "ticket": "Not found", "geo": "Global", "focus": "SDG innovation, business models, tech-enabled and impact-driven solutions", "closing": "2027-01-30", "status": "", "result": "", "cls": "fixed", "comment": "- need connection first\n- Deadline - January 2026", "link": ""}, {"id": 180, "name": "WE Empower UN SDG Challenge 2026", "investor": "UN Women / Walmart Foundation", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2027-03-08", "status": "", "result": "", "cls": "fixed", "comment": "Portal distorted due to time lapse, could not submit. We will apply strongly for next time. Failed to Submit 2026", "link": "https://docs.google.com/document/d/1ZhGo_AH3doDAtw94jCHKzzxLi49f4-f1bpX2t0RTuUE/edit?tab=t.0"}, {"id": 181, "name": "2027 United Nations Water Conference", "investor": "United Nations", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2027-03-20", "status": "", "result": "", "cls": "fixed", "comment": "December 8–10, 2026, in Abu Dhabi, United Arab Emirates (UAE), Dropped 2026", "link": ""}, {"id": 182, "name": "Bayer Foundation (Women Entrepreneurs Award)", "investor": "Bayer Foundation", "hq": "Germany", "type": "Grant/ Award", "ticket": "25000.0", "geo": "Asia Pacific, Latin America, Africa & Middle East", "focus": "Health, Food security (SDG 2 & SDG 3 focused)", "closing": "2027-04-01", "status": "", "result": "", "cls": "fixed", "comment": "- The amount is small, so we may apply, focusing on the impact on female health, drop 2026\n- March 2 to April 14, 2026", "link": "https://bayerfoundation-wea.com/"}, {"id": 183, "name": "Acumen Ted Conference 2026", "investor": "Acumen", "hq": "United States", "type": "", "ticket": "", "geo": "", "focus": "", "closing": "2027-04-17", "status": "", "result": "", "cls": "fixed", "comment": "Attend the 2025 Conference, April 13-17", "link": ""}, {"id": 184, "name": "Elevate Prize Foundation", "investor": "Elevate Prize Foundation", "hq": "United States", "type": "Grant/ Award", "ticket": "Prize: $300,000 but annual budget would be between $2M and $10M", "geo": "Global, 2 year program", "focus": "Nomination>Eligibility Review>Invitation to Apply>Multi-round Evaluation>Finalist Interviews>Winner Selection & Announcement", "closing": "2027-04-30", "status": "Rolling", "result": "", "cls": "rolling", "comment": "Selection Process", "link": ""}, {"id": 185, "name": "iF Impact Prize", "investor": "iF Design Foundation", "hq": "Germany", "type": "Grant/ Award", "ticket": "50K Euro is divided into several projects", "geo": "Global", "focus": "Social Impact, Innovation", "closing": "2027-05-20", "status": "", "result": "", "cls": "fixed", "comment": "- Focus on product innovation rather than social service. Uniier: UCEF, IACIB, last time drop this\n- Deadlines: May & August\nNext: 1/July/2026 - 30/Aug/2026", "link": ""}];
+
+let progs=JSON.parse(localStorage.getItem('bh_v5')||'null')||SEED.map(p=>({...p}));
+let nid=Math.max(...progs.map(p=>p.id||0))+1;
+function save(){try{localStorage.setItem('bh_v5',JSON.stringify(progs))}catch(e){}hlPushProgramsToServer();}
+
+let tab='tracker',sq='',fCls='all',fSt='all',fTy='all',fHQ='all',fDateFrom='',fDateTo='';
+let addMode='manual',editId=null,CI={};
+let rpStart='',rpEnd='';
+
+function days(p){return p.closing?dU(p.closing):null}
+function fmtD(s){if(!s)return '—';const d=new Date(s);return d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}
+function fmtM(v){if(v>=1e6)return '$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return '$'+(v/1e3).toFixed(0)+'K';return '$'+v.toFixed(0)}
+function parseTkt(t){if(!t)return 0;const m=t.replace(/,/g,'').match(/(\d+(?:\.\d+)?)\s*([KMB])?/i);if(!m)return 0;let v=parseFloat(m[1]);if(m[2]){const u=m[2].toUpperCase();if(u==='K')v*=1e3;else if(u==='M')v*=1e6;else if(u==='B')v*=1e9}return v||0}
+function sortP(arr){
+  return [...arr].sort((a,b)=>{
+    const da=days(a),db=days(b);
+    // Both rolling (no date): sort by name
+    if(da===null&&db===null)return(a.name||'').localeCompare(b.name||'');
+    // Rolling goes after everything with a date
+    if(da===null)return 1;if(db===null)return -1;
+    // Both future/today: ascending (soonest deadline first)
+    if(da>=0&&db>=0)return da-db;
+    // Both expired: most recently expired first (da=-1 before da=-30)
+    // da=-1, db=-30 => db-da = -30-(-1) = -29 => negative => a comes first ✓
+    if(da<0&&db<0)return db-da;
+    // One expired, one future: expired goes AFTER future
+    if(da<0&&db>=0)return 1;
+    if(db<0&&da>=0)return -1;
+    return da-db;
+  });
+}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function clsB(c){const m={rolling:'<span class="badge b-r">🔄 Rolling</span>',fixed:'<span class="badge b-f">📅 Fixed</span>','suggested-rolling':'<span class="badge b-sr">🔄 Sugg. Rolling</span>','suggested-fixed':'<span class="badge b-sf">📅 Sugg. Fixed</span>'};return m[c]||''}
+function stB(s){if(!s)return '';const m={Drop:'<span class="badge b-drop">✕ Drop</span>',Submitted:'<span class="badge b-sub">📤 Submitted</span>',Rolling:'<span class="badge b-act">● Rolling</span>','Follow-up':'<span class="badge b-fp">⏳ Follow-up</span>','Fail to Submit':'<span class="badge b-drop">✕ Fail to Submit</span>','Yet to Submit':'<span class="badge b-pip">⬜ Yet to Submit</span>'};return m[s]||`<span class="badge">${esc(s)}</span>`}
+function resB(r){if(!r)return '';const m={'Follow-up':'<span class="badge b-fp">🔔 Follow-up</span>',Rejected:'<span class="badge b-rej">✗ Rejected</span>',Accepted:'<span class="badge b-acc">✓ Accepted</span>','Waiting for Result':'<span class="badge b-fp">⏳ Waiting for Result</span>'};return m[r]||`<span class="badge">${esc(r)}</span>`}
+function dLbl(p){const d=days(p);if(d===null)return '<span class="d-roll">Rolling</span>';if(d<0)return `<span class="d-exp">Expired ${Math.abs(d)}d ago</span>`;if(d===0)return '<span class="d-urg">⚠️ TODAY!</span>';if(d<=7)return `<span class="d-urg">🔴 ${d}d left</span>`;if(d<=14)return `<span class="d-soon">⚠️ ${d}d left</span>`;return `<span class="d-ok">${d}d left</span>`}
+function linkCell(p){if(p.link&&p.link.startsWith('http'))return `<div class="link-cell"><a href="${esc(p.link)}" target="_blank" onclick="event.stopPropagation()">🔗 Apply</a></div>`;return `<div class="link-cell"><span class="no-link">No link</span></div>`}
+function gv(id){const e=document.getElementById(id);return e?e.value.trim():''}
+function sv(id,v){const e=document.getElementById(id);if(e)e.value=v||''}
+
+function filt(extra){
+  let arr=sortP(progs);
+  if(extra)arr=arr.filter(extra);
+  if(sq){const q=sq.toLowerCase();arr=arr.filter(p=>[p.name,p.investor,p.hq,p.focus,p.comment].join(' ').toLowerCase().includes(q))}
+  if(fCls!=='all')arr=arr.filter(p=>p.cls===fCls);
+  if(fSt!=='all')arr=arr.filter(p=>p.status===fSt||p.result===fSt);
+  if(fTy!=='all')arr=arr.filter(p=>(p.type||'')===fTy);
+  if(fHQ!=='all')arr=arr.filter(p=>p.hq===fHQ);
+  if(fDateFrom)arr=arr.filter(p=>p.closing&&p.closing>=fDateFrom);
+  if(fDateTo)arr=arr.filter(p=>p.closing&&p.closing<=fDateTo);
+  return arr;
+}
+function applyHitlistNext30Days(){
+  const start=new Date();
+  const end=new Date();end.setDate(start.getDate()+30);
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  fDateFrom=fmt(start);fDateTo=fmt(end);
+  render();
+}
+function applyHitlistLast30Days(){
+  const end=new Date();
+  const start=new Date();start.setDate(end.getDate()-30);
+  const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  fDateFrom=fmt(start);fDateTo=fmt(end);
+  render();
+}
+function clearHitlistDateFilter(){
+  fDateFrom='';fDateTo='';
+  render();
+}
+
+function upd(){
+  document.getElementById('todayBadge').textContent=T0.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  const pip=progs.filter(p=>{const d=days(p);return d!==null&&d>=0&&d<=30&&p.status!=='Drop'});
+  document.getElementById('c-tracker').textContent=progs.length;
+  document.getElementById('c-pipeline').textContent=pip.length;
+  document.getElementById('c-rolling').textContent=progs.filter(p=>p.cls==='rolling'||p.cls==='suggested-rolling').length;
+  // sidebar quick stats
+  document.getElementById('sb-total').textContent=progs.length;
+  document.getElementById('sb-sub').textContent=progs.filter(p=>p.status==='Submitted').length;
+  document.getElementById('sb-acc').textContent=progs.filter(p=>p.result==='Accepted').length;
+  document.getElementById('sb-rej').textContent=progs.filter(p=>p.result==='Rejected').length;
+  document.getElementById('sb-fp').textContent=progs.filter(p=>p.result==='Follow-up').length;
+  document.getElementById('sb-drp').textContent=progs.filter(p=>p.status==='Drop').length;
+}
+
+function tbl(arr){
+  if(!arr.length)return '<div class="empty">No programs match your filters.</div>';
+  return `<div class="tbl-wrap"><table>
+  <thead><tr>
+    <th>Program · Investor · HQ · Ticket · Focus</th><th>Type</th>
+    <th>Days Left</th><th>Closing Date</th><th>Website</th>
+    <th>Classification</th><th>Status / Result</th><th>Notes</th><th></th>
+  </tr></thead>
+  <tbody>${arr.map(p=>{
+    const d=days(p),exp=d!==null&&d<0;
+    const combo=`${esc(p.name)}_${esc(p.investor)}_${esc(p.hq)}`;
+    return `<tr class="${exp?'exp':''}" onclick="openDtl(${p.id})" style="cursor:pointer">
+      <td><div class="pname">${esc(p.name)}</div><div class="pinv">🏢 ${esc(p.investor||'—')}</div><div class="phq">🌍 ${esc(p.hq||'—')}</div><div class="pticket" title="${esc(p.ticket||'—')}">💰 Ticket Size: ${esc(p.ticket||'—')}</div><div class="pfocus" title="${esc(p.focus||'—')}">🎯 Focus: ${esc(p.focus||'—')}</div><div class="pcombo" title="${combo}">${combo}</div></td>
+      <td>${p.type?`<span class="tchip">${esc(p.type)}</span>`:'—'}</td>
+      <td>${dLbl(p)}</td>
+      <td style="font-size:11px;color:var(--t2);white-space:nowrap">${fmtD(p.closing)}</td>
+      <td onclick="event.stopPropagation()">${linkCell(p)}</td>
+      <td>${clsB(p.cls)}</td>
+      <td style="white-space:nowrap">${stB(p.status)}<br>${resB(p.result)}</td>
+      <td class="ccell"><div class="cclip">${esc(p.comment||'—')}</div></td>
+      <td><div class="iact" onclick="event.stopPropagation()"><div class="ib" onclick="openEdit(${p.id})">✏️</div><div class="ib" onclick="delP(${p.id})">🗑️</div></div></td>
+    </tr>`;
+  }).join('')}</tbody></table></div>`;
+}
+
+function fbarHTML(){
+  const hqs=[...new Set(progs.map(p=>p.hq).filter(Boolean))].sort().map(h=>`<option value="${esc(h)}" ${fHQ===h?'selected':''}>${esc(h)}</option>`).join('');
+  const tys=[...new Set(progs.map(p=>p.type).filter(Boolean))].sort().map(t=>`<option value="${esc(t)}" ${fTy===t?'selected':''}>${esc(t)}</option>`).join('');
+  return `<div class="fbar">
+    <label>Filter</label>
+    <div class="sw"><input type="text" id="fSearch" placeholder="Search name, investor, country…" value="${esc(sq)}" oninput="sq=this.value;render()"></div>
+    <div class="fdiv"></div>
+    <select onchange="fCls=this.value;render()"><option value="all" ${fCls==='all'?'selected':''}>All Classifications</option><option value="rolling" ${fCls==='rolling'?'selected':''}>Rolling</option><option value="fixed" ${fCls==='fixed'?'selected':''}>Fixed</option><option value="suggested-rolling" ${fCls==='suggested-rolling'?'selected':''}>Suggested Rolling</option><option value="suggested-fixed" ${fCls==='suggested-fixed'?'selected':''}>Suggested Fixed</option></select>
+    <select onchange="fSt=this.value;render()"><option value="all" ${fSt==='all'?'selected':''}>All Statuses</option><option value="Rolling" ${fSt==='Rolling'?'selected':''}>Active / Rolling</option><option value="Submitted" ${fSt==='Submitted'?'selected':''}>Submitted</option><option value="Follow-up" ${fSt==='Follow-up'?'selected':''}>Follow-up</option><option value="Drop" ${fSt==='Drop'?'selected':''}>Dropped</option><option value="Accepted" ${fSt==='Accepted'?'selected':''}>Accepted</option><option value="Rejected" ${fSt==='Rejected'?'selected':''}>Rejected</option><option value="Waiting for Result" ${fSt==='Waiting for Result'?'selected':''}>Waiting for Result</option></select>
+    <select onchange="fTy=this.value;render()"><option value="all">All Types</option>${tys}</select>
+    <select onchange="fHQ=this.value;render()"><option value="all">All HQ Countries</option>${hqs}</select>
+    <span style="font-size:11px;color:var(--t3);white-space:nowrap">From</span>
+    <input type="date" value="${fDateFrom}" onchange="fDateFrom=this.value;render()" title="Filter by closing date, from">
+    <span style="font-size:11px;color:var(--t3);white-space:nowrap">To</span>
+    <input type="date" value="${fDateTo}" onchange="fDateTo=this.value;render()" title="Filter by closing date, to">
+    <button class="btn btn-g btn-sm" onclick="applyHitlistLast30Days()">Last 30 Days</button>
+    <button class="btn btn-g btn-sm" onclick="applyHitlistNext30Days()">Next 30 Days</button>
+    <button class="btn btn-g btn-sm" onclick="clearHitlistDateFilter()">Clear Dates</button>
+  </div>`;
+}
+
+function statsRow(){
+  return `<div class="stat-row">
+    <div class="sc" style="--acc:var(--bh)"><div class="sn">${progs.length}</div><div class="sl">Total Programs</div></div>
+    <div class="sc" style="--acc:var(--gr)"><div class="sn">${progs.filter(p=>p.cls==='rolling').length}</div><div class="sl">Rolling</div></div>
+    <div class="sc" style="--acc:var(--bl)"><div class="sn">${progs.filter(p=>p.cls==='fixed').length}</div><div class="sl">Fixed Deadline</div></div>
+    <div class="sc" style="--acc:var(--t3)"><div class="sn">${progs.filter(p=>p.status==='Drop').length}</div><div class="sl">Dropped</div></div>
+    <div class="sc" style="--acc:var(--am)"><div class="sn">${progs.filter(p=>p.result==='Follow-up').length}</div><div class="sl">Follow Up</div></div>
+    <div class="sc" style="--acc:var(--tl)"><div class="sn">${progs.filter(p=>p.result==='Waiting for Result').length}</div><div class="sl">Waiting For Result</div></div>
+    <div class="sc" style="--acc:var(--pu)"><div class="sn">${progs.filter(p=>p.status==='Submitted').length}</div><div class="sl">Submitted</div></div>
+    <div class="sc" style="--acc:var(--gr)"><div class="sn">${progs.filter(p=>p.result==='Accepted').length}</div><div class="sl">Accepted</div></div>
+    <div class="sc" style="--acc:var(--rd)"><div class="sn">${progs.filter(p=>p.result==='Rejected').length}</div><div class="sl">Rejected</div></div>
+  </div>`;
+}
+
+function render(){
+  const fsEl=document.getElementById('fSearch');
+  const fsFocused=fsEl&&document.activeElement===fsEl;
+  const fsSelStart=fsFocused?fsEl.selectionStart:null;
+  const fsSelEnd=fsFocused?fsEl.selectionEnd:null;
+  upd();
+  if(tab==='report'){renderReport();return}
+  const el=document.getElementById('main');
+  if(tab==='tracker'){
+    const arr=filt();
+    el.innerHTML=statsRow()+fbarHTML()+`<div class="lgnd">
+      <span class="li"><span class="ld" style="background:var(--gr)"></span>Confirmed Rolling</span>
+      <span class="li"><span class="ld" style="background:var(--bl)"></span>Confirmed Fixed</span>
+      <span class="li"><span class="ld" style="background:#81C784"></span>Suggested Rolling</span>
+      <span class="li"><span class="ld" style="background:#90CAF9"></span>Suggested Fixed</span>
+      <span class="li" style="color:var(--t3);font-style:italic">🕐 Expired rows sink to bottom</span>
+    </div><div class="cnote">Showing ${arr.length} of ${progs.length} programs · sorted by deadline</div>`+tbl(arr);
+  } else if(tab==='pipeline'){
+    const p14=sortP(progs.filter(p=>{const d=days(p);return d!==null&&d>=0&&d<=14&&p.status!=='Drop'}));
+    const p30=sortP(progs.filter(p=>{const d=days(p);return d!==null&&d>14&&d<=30&&p.status!=='Drop'}));
+    const pl=a=>a.length?a.map(p=>`<div class="pi" onclick="openDtl(${p.id})">
+      <div class="pid" style="background:${days(p)<=7?'var(--rd)':days(p)<=14?'#D97706':'var(--gr)'}"></div>
+      <div style="flex:1"><div class="pin">${esc(p.name)}</div><div class="pim">${esc(p.investor||'')}${p.hq?' · 🌍 '+esc(p.hq):''}</div></div>
+      <div class="pidy ${days(p)<=7?'d-urg':days(p)<=14?'d-soon':'d-ok'}">${days(p)}d</div>
+    </div>`).join(''):'<div style="font-size:11px;color:var(--t3);padding:7px 0">None in this window.</div>';
+    const arr=filt(p=>{const d=days(p);return d!==null&&d>=0&&d<=30&&p.status!=='Drop'});
+    el.innerHTML=`<div class="pband">
+      <div class="pcard"><h4>🔴 Next 14 Days <span class="ptag" style="background:var(--rd-l);color:var(--rd)">${p14.length} programs</span></h4>${pl(p14)}</div>
+      <div class="pcard"><h4>🟡 15–30 Days <span class="ptag" style="background:var(--am-l);color:var(--am)">${p30.length} programs</span></h4>${pl(p30)}</div>
+    </div>${fbarHTML()}<div class="cnote">Showing ${arr.length} programs closing within 30 days</div>${tbl(arr)}`;
+  } else if(tab==='rolling'){
+    const arr=filt(p=>p.cls==='rolling'||p.cls==='suggested-rolling');
+    el.innerHTML=fbarHTML()+`<div class="cnote">Showing ${arr.length} rolling / open programs</div>`+tbl(arr);
+  }
+  if(fsFocused){
+    const ns=document.getElementById('fSearch');
+    if(ns){ns.focus();try{ns.setSelectionRange(fsSelStart,fsSelEnd);}catch(e){}}
+  }
+}
+
+function setTab(t){
+  tab=t;dCharts();
+  document.querySelectorAll('.ntab').forEach(e=>e.classList.remove('active'));
+  document.getElementById('t-'+t)?.classList.add('active');
+  render();
+}
+function dCharts(){Object.values(CI).forEach(c=>{try{c.destroy()}catch(e){}});CI={}}
+
+// ── REPORT ────────────────────────────────────────────────────────────────────
+function setQuick(preset){
+  const now=new Date();
+  let s=new Date(now),e=new Date(now);
+  if(preset==='biweekly')s.setDate(now.getDate()-14);
+  else if(preset==='monthly')s.setMonth(now.getMonth()-1);
+  else if(preset==='quarterly')s.setMonth(now.getMonth()-3);
+  else if(preset==='yearly')s.setFullYear(now.getFullYear()-1);
+  else if(preset==='all'){s=new Date('2019-01-01');e=new Date('2030-12-31')}
+  rpStart=s.toISOString().split('T')[0];
+  rpEnd=e.toISOString().split('T')[0];
+  sv('rp-start',rpStart);sv('rp-end',rpEnd);
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.toggle('active',b.dataset.q===preset));
+  applyReport();
+}
+function applyReport(){rpStart=gv('rp-start');rpEnd=gv('rp-end');document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));renderReport()}
+function getReportArr(){
+  let arr=progs;
+  if(rpStart||rpEnd){arr=arr.filter(p=>{if(!p.closing)return false;const d=p.closing;if(rpStart&&d<rpStart)return false;if(rpEnd&&d>rpEnd)return false;return true})}
+  return arr;
+}
+function periodLabel(){
+  if(!rpStart&&!rpEnd)return 'All Time';
+  const f=s=>s?new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'—';
+  if(rpStart&&rpEnd)return `${f(rpStart)} → ${f(rpEnd)}`;
+  if(rpStart)return `From ${f(rpStart)}`;
+  return `Until ${f(rpEnd)}`;
+}
+
+function renderReport(){
+  dCharts();
+  const arr=getReportArr();
+  const tot=arr.length,sub=arr.filter(p=>p.status==='Submitted'||['Accepted','Rejected','Follow-up'].includes(p.result)).length;
+  const acc=arr.filter(p=>p.result==='Accepted').length,rej=arr.filter(p=>p.result==='Rejected').length;
+  const fp=arr.filter(p=>p.result==='Follow-up').length,drp=arr.filter(p=>p.status==='Drop').length;
+  const wr=sub>0?((acc/sub)*100).toFixed(1):'0.0',lr=sub>0?((rej/sub)*100).toFixed(1):'0.0';
+  const p14=progs.filter(p=>{const d=days(p);return d!==null&&d>=0&&d<=14&&p.status!=='Drop'}).length;
+  const p30=progs.filter(p=>{const d=days(p);return d!==null&&d>=0&&d<=30&&p.status!=='Drop'}).length;
+  const totOpp=arr.filter(p=>p.status!=='Drop'&&p.result!=='Rejected').reduce((s,p)=>s+parseTkt(p.ticket),0);
+  const raised=arr.filter(p=>p.result==='Accepted').reduce((s,p)=>s+parseTkt(p.ticket),0);
+  const tyMap={},hqMap={};
+  arr.forEach(p=>{const t=p.type||'Other';tyMap[t]=(tyMap[t]||0)+1;const h=p.hq||'Unknown';hqMap[h]=(hqMap[h]||0)+1});
+  const topHQ=Object.entries(hqMap).sort((a,b)=>b[1]-a[1]).slice(0,7);
+  const CL=['#256B3E','#5BAA7B','#8A5200','#1B4F8A','#8A1C1C','#5B2A8A','#1A6B6B','#C4973A'];
+
+  document.getElementById('main').innerHTML=`<div>
+  <div class="rctrl">
+    <div class="rctrl-group"><label>Start Date</label><input type="date" id="rp-start" value="${rpStart}" onchange="rpStart=this.value"></div>
+    <div class="rctrl-group"><label>End Date</label><input type="date" id="rp-end" value="${rpEnd}" onchange="rpEnd=this.value"></div>
+    <button class="apply-btn" onclick="applyReport()">▶ Generate Report</button>
+    <div class="rctrl-divider"></div>
+    <div class="rctrl-group"><label>Quick Select</label>
+      <div class="quick-btns">
+        <button class="qbtn" data-q="biweekly" onclick="setQuick('biweekly')">Biweekly</button>
+        <button class="qbtn" data-q="monthly" onclick="setQuick('monthly')">Monthly</button>
+        <button class="qbtn" data-q="quarterly" onclick="setQuick('quarterly')">Quarterly</button>
+        <button class="qbtn" data-q="yearly" onclick="setQuick('yearly')">Yearly</button>
+        <button class="qbtn" data-q="all" onclick="setQuick('all')">All Time</button>
+      </div>
+    </div>
+    <div class="period-label">📅 ${periodLabel()}</div>
+    <button class="prbtn" onclick="window.print()">🖨️ Print / PDF</button>
+  </div>
+  <div class="rgrid">
+    <div class="rc"><div class="rn" style="color:var(--bh)">${tot}</div><div class="rl">Programs in Period</div></div>
+    <div class="rc"><div class="rn" style="color:var(--pu)">${sub}</div><div class="rl">Total Submitted</div></div>
+    <div class="rc"><div class="rn" style="color:var(--gr)">${acc}</div><div class="rl">Accepted / Won</div><div class="rs" style="color:var(--gr)">Win Rate: ${wr}%</div></div>
+    <div class="rc"><div class="rn" style="color:var(--rd)">${rej}</div><div class="rl">Rejected / Lost</div><div class="rs" style="color:var(--rd)">Loss Rate: ${lr}%</div></div>
+    <div class="rc"><div class="rn" style="color:var(--am)">${fp}</div><div class="rl">Result Yet to Publish</div></div>
+    <div class="rc"><div class="rn" style="color:var(--t3)">${drp}</div><div class="rl">Dropped Programs</div></div>
+    <div class="rc"><div class="rn" style="color:var(--rd)">${p14}</div><div class="rl">Pipeline · Next 14 Days</div></div>
+    <div class="rc"><div class="rn" style="color:var(--bl)">${p30}</div><div class="rl">Pipeline · Next 30 Days</div></div>
+  </div>
+  <div class="cgrid">
+    <div class="cc"><h4>Submission Funnel</h4><div class="cw"><canvas id="cF"></canvas></div></div>
+    <div class="cc"><h4>Programs by Type</h4><div class="cw"><canvas id="cT"></canvas></div></div>
+    <div class="cc"><h4>Available Opportunity vs Funds Raised</h4><div class="cw"><canvas id="cM"></canvas></div></div>
+    <div class="cc"><h4>Programs by HQ Country (Top 7)</h4><div class="cw"><canvas id="cH"></canvas></div></div>
+    <div class="cc"><h4>Classification Split</h4><div class="cw"><canvas id="cC"></canvas></div></div>
+    <div class="cc"><h4>Pipeline Urgency (Next 30 Days)</h4><div class="cw"><canvas id="cP"></canvas></div></div>
+  </div></div>`;
+
+  const gc=id=>document.getElementById(id).getContext('2d');
+  const bO={responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#eee'},ticks:{font:{size:10}}}}};
+  CI.f=new Chart(gc('cF'),{type:'bar',data:{labels:['Total','Submitted','Awaiting','Accepted','Rejected','Dropped'],datasets:[{data:[tot,sub,fp,acc,rej,drp],backgroundColor:['#256B3E88','#5B2A8A88','#8A520088','#256B3E','#8A1C1C','#aaa'],borderRadius:4}]},options:bO});
+  CI.t=new Chart(gc('cT'),{type:'doughnut',data:{labels:Object.keys(tyMap),datasets:[{data:Object.values(tyMap),backgroundColor:CL,borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right',labels:{font:{size:9},boxWidth:10}}}}});
+  CI.m=new Chart(gc('cM'),{type:'bar',data:{labels:['Available Opportunity','Funds Raised'],datasets:[{data:[totOpp,raised],backgroundColor:['#1B4F8A88','#256B3E'],borderRadius:5}]},options:{responsive:true,maintainAspectRatio:true,indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtM(c.raw)}}},scales:{x:{ticks:{callback:v=>fmtM(v),font:{size:10}},grid:{color:'#eee'}}}}});
+  CI.h=new Chart(gc('cH'),{type:'bar',data:{labels:topHQ.map(x=>x[0]),datasets:[{data:topHQ.map(x=>x[1]),backgroundColor:CL,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#eee'},ticks:{font:{size:9}}},x:{ticks:{font:{size:8}}}}}});
+  const cls=['rolling','fixed','suggested-rolling','suggested-fixed'];
+  CI.c=new Chart(gc('cC'),{type:'pie',data:{labels:['Rolling','Fixed','Sugg. Rolling','Sugg. Fixed'],datasets:[{data:cls.map(c=>arr.filter(p=>p.cls===c).length),backgroundColor:['#256B3E','#1B4F8A','#5BAA7B88','#90CAF988'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'right',labels:{font:{size:9},boxWidth:10}}}}});
+  const bk={'0–7d':0,'8–14d':0,'15–21d':0,'22–30d':0};
+  progs.filter(p=>{const d=days(p);return d!==null&&d>=0&&d<=30&&p.status!=='Drop'}).forEach(p=>{const d=days(p);if(d<=7)bk['0–7d']++;else if(d<=14)bk['8–14d']++;else if(d<=21)bk['15–21d']++;else bk['22–30d']++});
+  CI.p=new Chart(gc('cP'),{type:'bar',data:{labels:Object.keys(bk),datasets:[{data:Object.values(bk),backgroundColor:['#8A1C1C','#D97706','#1A6B6B','#256B3E'],borderRadius:4}]},options:{...bO,scales:{y:{grid:{color:'#eee'},ticks:{font:{size:10},stepSize:1}}}}});
+}
+
+// ── FORM ──────────────────────────────────────────────────────────────────────
+function clearF(){
+  ['fn','fi','fh','ft','fc','ff','fgeo','fd','fl','ffloc','fs','fr','fco'].forEach(id=>sv(id,''));
+  ['ufn','ufi','ufh','uft','ufc','uff','ufk','ufg','ufd','ufl','uffloc','ufs','ufr','ufco'].forEach(id=>sv(id,''));
+  document.getElementById('aires').classList.remove('show');
+  document.getElementById('uprog').classList.remove('show');
+  document.getElementById('ufSec').style.display='none';
+  try{document.getElementById('fi2').value=''}catch(e){}
+}
+function openAdd(mode){editId=null;document.getElementById('addTitle').textContent='Add New Program';clearF();clearInvalid();swTab(mode||'manual');document.getElementById('addOvl').classList.add('open')}
+function openEdit(id){
+  event.stopPropagation();
+  const p=progs.find(x=>x.id===id);if(!p)return;
+  editId=id;document.getElementById('addTitle').textContent='Edit Program';swTab('manual');clearF();
+  sv('fn',p.name);sv('fi',p.investor);sv('fh',p.hq);sv('ft',p.type);sv('fc',p.cls);
+  sv('ff',p.focus);sv('fk',p.ticket);sv('fgeo',p.geo);sv('fd',p.closing||'');
+  sv('fl',p.link||'');sv('ffloc',p.fileLoc||'');sv('fs',p.status||'');sv('fr',p.result||'');sv('fco',p.comment||'');
+  document.getElementById('addOvl').classList.add('open');
+}
+function swTab(m){
+  addMode=m;
+  document.getElementById('sw-m').classList.toggle('active',m==='manual');
+  document.getElementById('sw-u').classList.toggle('active',m==='upload');
+  document.getElementById('mForm').style.display=m==='manual'?'block':'none';
+  document.getElementById('uForm').style.display=m==='upload'?'block':'none';
+}
+function markInvalid(id){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.classList.add('invalid');
+  try{el.scrollIntoView({block:'center',behavior:'smooth'});}catch(e){}
+  try{el.focus();}catch(e){}
+}
+function clearInvalid(){
+  ['fn','fi','fh','ft','ff','fk','fc','ufn','ufi','ufh','uft','uff','ufk','ufc'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.classList.remove('invalid');
+  });
+}
+function saveP(){
+  clearInvalid();
+  const up=addMode==='upload';
+  const n=up?gv('ufn'):gv('fn'),inv=up?gv('ufi'):gv('fi'),hq=up?gv('ufh'):gv('fh');
+  const ty=up?gv('uft'):gv('ft'),cls2=up?gv('ufc'):gv('fc'),foc=up?gv('uff'):gv('ff');
+  const tkt=up?gv('ufk'):gv('fk'),geo=up?gv('ufg'):gv('fgeo'),clo=up?gv('ufd'):gv('fd');
+  const lnk=up?gv('ufl'):gv('fl'),st=up?gv('ufs'):gv('fs'),res=up?gv('ufr'):gv('fr'),cmt=up?gv('ufco'):gv('fco');
+  const floc=up?gv('uffloc'):gv('ffloc');
+  if(!n){toast('Program Name is required','err');markInvalid(up?'ufn':'fn');return}
+  if(!inv){toast('Investor / Funder name is required','err');markInvalid(up?'ufi':'fi');return}
+  if(!hq){toast('HQ Country is required','err');markInvalid(up?'ufh':'fh');return}
+  if(!ty){toast('Program Type is required','err');markInvalid(up?'uft':'ft');return}
+  if(!foc){toast('Focus Area is required','err');markInvalid(up?'uff':'ff');return}
+  if(!tkt){toast('Ticket Size is required','err');markInvalid(up?'ufk':'fk');return}
+  if(!cls2){toast('Classification is required','err');markInvalid(up?'ufc':'fc');return}
+  const obj={id:editId||nid++,name:n,investor:inv,hq,type:ty,cls:cls2,focus:foc,ticket:tkt,geo,closing:clo||null,link:lnk,fileLoc:floc,status:st,result:res,comment:cmt};
+  if(editId){progs=progs.map(p=>p.id===editId?obj:p);toast('Program updated ✓')}
+  else{progs.push(obj);toast('Program added ✓')}
+  save();closeOvl('addOvl');render();
+}
+function delP(id){
+  event.stopPropagation();
+  if(!confirm('Remove this program?'))return;
+  if(hlServerConnected){
+    hlDeleteOnServer(id).then(function(res){
+      if(res && res.deleted){
+        progs=progs.filter(p=>p.id!==id);
+        try{localStorage.setItem('bh_v5',JSON.stringify(progs))}catch(e){}
+        render();toast('Removed');
+      } else if(res && res.error==='forbidden'){
+        toast('Only the server PC can delete a program — ask whoever is at the main PC to delete it there.','err');
+      } else {
+        toast('Delete failed','err');
+      }
+    }).catch(function(){
+      toast('Could not reach server to delete — try again once connected','err');
+    });
+  } else {
+    progs=progs.filter(p=>p.id!==id);save();render();toast('Removed');
+  }
+}
+function openDtl(id){
+  const p=progs.find(x=>x.id===id);if(!p)return;
+  const d=days(p);
+  document.getElementById('dtlC').innerHTML=`
+  <div class="mhdr">
+    <div><h3>${esc(p.name)}</h3><p>🏢 ${esc(p.investor||'—')} · 🌍 ${esc(p.hq||'—')}</p></div>
+    <button class="mcls" onclick="closeOvl('dtlOvl')">×</button>
+  </div>
+  <div class="mbdy">
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px">${clsB(p.cls)} ${p.type?`<span class="tchip">${esc(p.type)}</span>`:''} ${stB(p.status)} ${resB(p.result)}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:9px">
+      <div class="dfield"><label>Ticket Size</label><p>${esc(p.ticket||'—')}</p></div>
+      <div class="dfield"><label>Geography</label><p>${esc(p.geo||'—')}</p></div>
+      <div class="dfield"><label>Closing Date</label><p>${fmtD(p.closing)} ${d!==null?`(${d>=0?d+'d left':Math.abs(d)+'d ago'})`:'—'}</p></div>
+      <div class="dfield"><label>Focus Area</label><p>${esc(p.focus||'—')}</p></div>
+    </div>
+    ${p.link?`<div class="dfield"><label>Website / Apply Link</label><p><a href="${esc(p.link)}" target="_blank">🔗 ${esc(p.link)}</a></p></div>`:''}
+    ${p.fileLoc?`<div class="dfield"><label>File Location</label><p style="font-size:11px">📁 ${esc(p.fileLoc)}</p></div>`:''}
+    <div class="dfield"><label>Combo ID</label><p style="font-size:10px;color:var(--t3)">${esc(p.name)}_${esc(p.investor||'—')}_${esc(p.hq||'—')}</p></div>
+    ${p.comment?`<div class="dfield" style="margin-top:8px"><label>Notes & Analysis</label><p style="white-space:pre-line;font-size:12px;line-height:1.6">${esc(p.comment)}</p></div>`:''}
+  </div>
+  <div class="mftr">
+    <button class="btn btn-d btn-sm" onclick="delP(${p.id});closeOvl('dtlOvl')">Delete</button>
+    <button class="btn btn-p btn-sm" onclick="closeOvl('dtlOvl');openEdit(${p.id})">✏️ Edit</button>
+  </div>`;
+  document.getElementById('dtlOvl').classList.add('open');
+}
+
+// ── FILE UPLOAD ───────────────────────────────────────────────────────────────
+function handleUpload(inp){
+  const file=inp.files[0];if(!file)return;
+  const prog=document.getElementById('uprog'),fill=document.getElementById('pf'),st=document.getElementById('upst');
+  prog.classList.add('show');st.textContent=`Reading ${file.name}…`;fill.style.width='10%';
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    fill.style.width='40%';st.textContent='Sending to Claude AI for extraction…';
+    try{
+      let txt=typeof e.target.result==='string'?e.target.result.substring(0,8000):`[Binary file: ${file.name}]`;
+      fill.style.width='60%';
+      const sys=`Extract grant/funding program details from text. Return ONLY valid JSON (no markdown):
+{"name":"Program name","investor":"Funder name","hq":"HQ country","type":"Grant|Award|Equity|Loan|Capacity Building|Debt|Mix-model|Other","focus":"focus area","ticket":"funding amount","geo":"eligible geography","closing":"YYYY-MM-DD or empty","link":"apply URL or empty","cls":"rolling|fixed|suggested-rolling|suggested-fixed","comment":"key notes"}`;
+      const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:800,system:sys,messages:[{role:'user',content:`Extract grant details:
+
+${txt}`}]})});
+      fill.style.width='85%';
+      const data=await resp.json();
+      const raw=(data.content?.[0]?.text||'{}').replace(/```json|```/g,'').trim();
+      let ext={};try{ext=JSON.parse(raw)}catch(e){}
+      fill.style.width='100%';st.textContent='✓ Done — review below';
+      const ai=document.getElementById('aires');
+      ai.innerHTML='<strong>✓ Fields extracted:</strong>'+Object.entries(ext).filter(([k,v])=>v).map(([k,v])=>`<div><span style="color:var(--t3);font-size:9px;text-transform:uppercase;font-weight:700">${esc(k)}:</span> <span style="font-size:11px">${esc(String(v))}</span></div>`).join('');
+      ai.classList.add('show');
+      const m={name:'ufn',investor:'ufi',hq:'ufh',type:'uft',cls:'ufc',focus:'uff',ticket:'ufk',geo:'ufg',closing:'ufd',link:'ufl',comment:'ufco'};
+      Object.entries(m).forEach(([k,id])=>{if(ext[k])sv(id,ext[k])});
+      if(ext.status)sv('ufs',ext.status);
+      document.getElementById('ufSec').style.display='block';
+    }catch(err){
+      fill.style.width='100%';st.textContent='⚠️ AI extraction failed — fill manually';
+      document.getElementById('ufSec').style.display='block';
+    }
+  };
+  if(file.name.match(/\.(pdf|xlsx|xls|docx)$/i))reader.readAsArrayBuffer(file);
+  else reader.readAsText(file);
+}
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');const f=e.dataTransfer.files[0];if(f){document.getElementById('fi2').files=e.dataTransfer.files;handleUpload({files:e.dataTransfer.files})}});
+
+function closeOvl(id){document.getElementById(id).classList.remove('open')}
+document.querySelectorAll('.ovl').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')}));
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=(type==='ok'?'✓ ':type==='err'?'✕ ':'')+msg;t.className=`toast ${type} show`;setTimeout(()=>t.classList.remove('show'),3000)}
+
+// ─── SERVER CONNECTION (LAN sync via proposal_server.py) ───────────────────
+const HL_SERVER_IP_KEY='bh_server_ip';
+const HL_SERVER_TOKEN_KEY='bh_server_token';
+let hlServerConnected=false;
+let hlServerBaseUrl='';
+let hlServerToken='';
+let hlServerSyncing=false;
+
+function hlNormalizeServerBase(raw){
+  raw=(raw||'').trim();
+  if(!raw)return'';
+  if(!/^https?:\/\//i.test(raw))raw='http://'+raw;
+  return raw.replace(/\/+$/,'');
+}
+
+function hlSetServerUI(state,message){
+  const dot=document.getElementById('server-dot');
+  const btn=document.getElementById('server-connect-btn');
+  const status=document.getElementById('server-status-text');
+  const ipInput=document.getElementById('server-ip-input');
+  const tokenInput=document.getElementById('server-token-input');
+  if(!dot||!btn||!status)return;
+  dot.className='server-dot '+(state==='on'?'on':state==='error'?'error':'off');
+  status.className='server-status '+(state==='on'?'on':state==='error'?'error':'');
+  status.textContent=message||(state==='on'?'Connected':'Not connected');
+  if(state==='on'){
+    btn.textContent='Disconnect';btn.className='server-btn disconnect';
+    if(ipInput)ipInput.disabled=true;
+    if(tokenInput)tokenInput.disabled=true;
+  } else {
+    btn.textContent='Connect';btn.className='server-btn connect';
+    if(ipInput)ipInput.disabled=false;
+    if(tokenInput)tokenInput.disabled=false;
+  }
+}
+
+function toggleServerConnection(){
+  if(hlServerConnected){hlDisconnectServer();}else{hlConnectServer();}
+}
+
+function hlConnectServer(){
+  const ipInput=document.getElementById('server-ip-input');
+  const tokenInput=document.getElementById('server-token-input');
+  const ip=ipInput?ipInput.value.trim():'';
+  const token=tokenInput?tokenInput.value.trim():'';
+  if(!ip||!token){toast('Enter the server IP and access token first','err');return;}
+  const base=hlNormalizeServerBase(ip);
+  hlSetServerUI('off','Connecting…');
+  fetch(base+'/verify?token='+encodeURIComponent(token))
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.ok){
+        hlServerBaseUrl=base;hlServerToken=token;hlServerConnected=true;
+        try{localStorage.setItem(HL_SERVER_IP_KEY,ip);localStorage.setItem(HL_SERVER_TOKEN_KEY,token);}catch(e){}
+        hlSetServerUI('on','Connected');
+        toast('Connected to server');
+        hlPullFromServer();
+      } else {
+        hlSetServerUI('error','Bad token');
+        toast('Connection failed: bad access token','err');
+      }
+    })
+    .catch(()=>{
+      hlSetServerUI('error','Could not reach server');
+      toast('Could not reach server — check the IP and that it\'s on the same network','err');
+    });
+}
+
+function hlDisconnectServer(){
+  hlServerConnected=false;hlServerBaseUrl='';hlServerToken='';
+  try{localStorage.removeItem(HL_SERVER_IP_KEY);localStorage.removeItem(HL_SERVER_TOKEN_KEY);}catch(e){}
+  hlSetServerUI('off','Not connected');
+  toast('Disconnected from server');
+}
+
+function hlRestoreServerConnection(){
+  let ip='',token='';
+  try{ip=localStorage.getItem(HL_SERVER_IP_KEY)||'';token=localStorage.getItem(HL_SERVER_TOKEN_KEY)||'';}catch(e){}
+  const ipInput=document.getElementById('server-ip-input');
+  const tokenInput=document.getElementById('server-token-input');
+  if(ip&&ipInput)ipInput.value=ip;
+  if(token&&tokenInput)tokenInput.value=token;
+  if(!ip||!token)return;
+  const base=hlNormalizeServerBase(ip);
+  fetch(base+'/verify?token='+encodeURIComponent(token))
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.ok){
+        hlServerBaseUrl=base;hlServerToken=token;hlServerConnected=true;
+        hlSetServerUI('on','Connected');
+        hlPullFromServer();
+      } else {
+        hlSetServerUI('error','Saved token no longer valid');
+      }
+    })
+    .catch(()=>{hlSetServerUI('error','Server unreachable');});
+}
+
+function hlPullFromServer(){
+  if(!hlServerConnected)return;
+  fetch(hlServerBaseUrl+'/hitlist-data/load?token='+encodeURIComponent(hlServerToken))
+    .then(r=>r.json())
+    .then(data=>{
+      if(data&&data.ok&&Array.isArray(data.programs)&&data.programs.length){
+        progs=data.programs;
+        try{localStorage.setItem('bh_v5',JSON.stringify(progs));}catch(e){}
+        render();
+      }
+    })
+    .catch(()=>{});
+}
+
+function hlPushProgramsToServer(){
+  if(!hlServerConnected||hlServerSyncing)return;
+  hlServerSyncing=true;
+  fetch(hlServerBaseUrl+'/hitlist-data/save?token='+encodeURIComponent(hlServerToken),{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({programs:progs})
+  })
+    .catch(()=>{hlSetServerUI('error','Sync failed — check connection');})
+    .finally(()=>{hlServerSyncing=false;});
+}
+
+function hlDeleteOnServer(id){
+  return fetch(hlServerBaseUrl+'/hitlist-data/delete?token='+encodeURIComponent(hlServerToken),{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:id})
+  }).then(r=>r.json());
+}
+
+function hlRenderSidebarDate(){
+  const el=document.getElementById('sidebar-date');
+  if(!el)return;
+  const now=new Date();
+  el.textContent=now.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+render();
+hlRenderSidebarDate();
+hlRestoreServerConnection();
+</script>
+</body>
+</html>

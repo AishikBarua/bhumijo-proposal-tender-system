@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Bhumijo Tender Agent{% endblock %}</title>
+<link rel="stylesheet" href="/agent/static/style.css">
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">Bhumijo <span>Tender Agent</span></div>
+  <nav>
+    <a href="/">&larr; Bhumijo Tracker</a>
+    <a href="/agent/">Dashboard</a>
+    <a href="/agent/add-tender">Add tender</a>
+    <a href="/agent/email-settings">Email settings</a>
+    <a href="/agent/profile">Company profile</a>
+  </nav>
+</div>
+<div class="wrap">
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

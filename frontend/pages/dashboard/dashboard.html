@@ -1,0 +1,64 @@
+<!-- The dashboard screen.
+     Markup lifted unchanged from the original single file. -->
+
+    <div class="page active" id="page-dashboard">
+      <div class="report-controls" style="margin-bottom:16px">
+        <select class="filter-select" id="dash-filter-entity" onchange="renderDashboard()">
+          <option value="">All Entities</option>
+          <option value="P&D">Planning & Design</option>
+          <option value="FM">Facility Management</option>
+          <option value="WASH">WASH / Toilets</option>
+          <option value="Tech">Technology</option>
+        </select>
+        <select class="filter-select" id="dash-filter-status" onchange="renderDashboard()">
+          <option value="">All Status</option>
+          <option value="Yet to be submitted">Yet to Submit</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Submitted & Waiting for Result">Submitted & Waiting For Result</option>
+          <option value="Submitted & Accepted">Submitted & Accepted</option>
+          <option value="Submitted & Rejected">Submitted & Rejected</option>
+          <option value="Hold">Hold</option>
+          <option value="Drop">Drop</option>
+          <option value="Unable to submit">Unable to Submit</option>
+        </select>
+        <select class="filter-select" id="dash-filter-result" onchange="renderDashboard()">
+          <option value="">All Results</option>
+          <option value="Accepted">Accepted</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Waiting for Result">Waiting</option>
+        </select>
+        <span style="font-size:12px;color:var(--text3);white-space:nowrap">From</span>
+        <input type="date" class="filter-select" id="dash-filter-start-date" onchange="renderDashboard()" title="Filter by closing date, from" style="width:140px">
+        <span style="font-size:12px;color:var(--text3);white-space:nowrap">To</span>
+        <input type="date" class="filter-select" id="dash-filter-end-date" onchange="renderDashboard()" title="Filter by closing date, to" style="width:140px">
+        <button class="btn btn-ghost" onclick="applyDashboardLast30Days()" style="font-size:12px;padding:7px 14px;white-space:nowrap">Last 30 Days</button>
+        <button class="btn btn-ghost" onclick="clearDashboardDateFilter()" style="font-size:12px;padding:7px 14px;white-space:nowrap">Clear Dates</button>
+      </div>
+      <div class="stat-grid" id="stat-grid"></div>
+      <div class="deadline-strip" id="deadline-strip" style="display:none"></div>
+      <div class="chart-grid">
+        <div class="chart-card"><div class="chart-title">Proposals by Entity</div><div class="chart-sub">% share of total till date</div><canvas id="chart-entity-pct" height="200"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Win Rate by Entity</div><div class="chart-sub">Accepted ÷ (Accepted + Rejected)</div><canvas id="chart-entity-win" height="200"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Submissions Over Time</div><div class="chart-sub">Monthly, last 18 months</div><canvas id="chart-timeline" height="200"></canvas></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><div class="chart-title">Outcome Distribution</div><div class="chart-sub">Accepted vs Rejected vs Pending</div><canvas id="chart-outcome" height="200"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Proposals by Entity</div><div class="chart-sub">Total count</div><canvas id="chart-by-entity" height="200"></canvas></div>
+        <div class="chart-card"><div class="chart-title">Active Pipeline</div><div class="chart-sub">In-progress by entity</div><canvas id="chart-pipeline" height="200"></canvas></div>
+      </div>
+
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h3>Recent Activity</h3>
+          <button class="btn btn-ghost" onclick="showPage('proposals')">View all →</button>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Title</th><th>Entity</th><th>Category</th>
+            <th>Days Left</th><th>Deadline</th><th>Status</th>
+          </tr></thead>
+          <tbody id="recent-tbody"></tbody>
+        </table>
+      </div>
+    </div>

@@ -1,0 +1,16 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+
+# --- merged in from tender-agent (the AI Agent module, backend/../app) ---
+starlette==0.41.3
+jinja2==3.1.6
+sqlalchemy==2.0.52
+pypdf==6.15.0
+python-multipart==0.0.32
+anthropic==0.121.0
+beautifulsoup4==4.14.3
+apscheduler==3.11.3
+itsdangerous==2.2.0  # required by starlette.middleware.sessions.SessionMiddleware
+alembic==1.19.1
+httpx==0.28.1  # already a transitive dep of anthropic; explicit here because app.services.proposal_tracker imports it directly

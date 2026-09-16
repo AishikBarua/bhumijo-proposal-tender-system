@@ -1,0 +1,20 @@
+{% macro deadline_badge(t) %}
+  {% if t.urgency == 'urgent' %}
+    <span class="deadline-badge urgent">{{ t.deadline_display }}</span>
+  {% elif t.urgency == 'soon' %}
+    <span class="deadline-badge soon">{{ t.deadline_display }}</span>
+  {% elif t.urgency == 'expired' or t.urgency == 'unknown' %}
+    <span class="deadline-badge muted">{{ t.deadline_display }}</span>
+  {% else %}
+    <span class="deadline-badge">{{ t.deadline_display }}</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro type_label(t) %}
+  {# Two independent labels: entity is WHAT KIND OF WORK it is (P&D/FM/WASH/
+     Tech), tender_type is the procurement FORMAT (EOI/RFQ/RFP/...). Rendered
+     together here so every screen that already calls this macro picks up the
+     entity without a change of its own. #}
+  {% if t.entity %}<span class="entity-tag entity-{{ t.entity|lower|replace('&','') }}">{{ t.entity }}</span>{% endif %}
+  {% if t.tender_type %}<span class="type-label">{{ t.tender_type }}</span>{% endif %}
+{% endmacro %}

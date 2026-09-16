@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Company profile</h1>
+<div class="subtitle">This is the reference the AI checks every tender against. Keep it accurate.</div>
+
+<h2>General capabilities</h2>
+<form class="panel" method="post" action="/agent/profile/update">
+  <label for="sectors">Sectors</label>
+  <input type="text" name="sectors" id="sectors" value="{{ profile.sectors }}">
+
+  <label for="capabilities_summary">Capabilities summary</label>
+  <textarea name="capabilities_summary" id="capabilities_summary">{{ profile.capabilities_summary }}</textarea>
+
+  <label for="geographic_reach">Geographic reach</label>
+  <input type="text" name="geographic_reach" id="geographic_reach" value="{{ profile.geographic_reach }}">
+
+  <div style="margin-top:16px;"><button class="btn" type="submit">Save</button></div>
+</form>
+
+<h2>Certifications & enlistments</h2>
+<div class="panel">
+  {% if certs %}
+  <table>
+    <tr><th>Name</th><th>Issuing body</th><th>Valid until</th><th></th></tr>
+    {% for c in certs %}
+    <tr>
+      <td>{{ c.name }}</td><td>{{ c.issuing_body or "-" }}</td><td>{{ c.valid_until or "-" }}</td>
+      <td><form method="post" action="/agent/profile/cert/{{ c.id }}/delete"><button class="del-link" type="submit" style="background:none;border:none;cursor:pointer;">Remove</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">No certifications added yet.</div>
+  {% endif %}
+</div>
+<form class="panel" method="post" action="/agent/profile/cert/add">
+  <div class="field-row">
+    <div><label for="cname">Name</label><input type="text" name="name" id="cname" placeholder="e.g. LGED Enlistment - Class A" required></div>
+    <div><label for="cbody">Issuing body</label><input type="text" name="issuing_body" id="cbody" placeholder="e.g. LGED"></div>
+    <div><label for="cvalid">Valid until</label><input type="text" name="valid_until" id="cvalid" placeholder="e.g. 2027"></div>
+  </div>
+  <div style="margin-top:16px;"><button class="btn secondary" type="submit">Add certification</button></div>
+</form>
+
+<h2>Past contracts</h2>
+<div class="panel">
+  {% if contracts %}
+  <table>
+    <tr><th>Client</th><th>Year</th><th>Value (BDT)</th><th>Scope</th><th></th></tr>
+    {% for c in contracts %}
+    <tr>
+      <td>{{ c.client_name }}</td><td>{{ c.year or "-" }}</td><td>{{ c.contract_value_bdt or "-" }}</td><td>{{ c.scope_of_work }}</td>
+      <td><form method="post" action="/agent/profile/contract/{{ c.id }}/delete"><button class="del-link" type="submit" style="background:none;border:none;cursor:pointer;">Remove</button></form></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <div class="empty">No past contracts added yet.</div>
+  {% endif %}
+</div>
+<form class="panel" method="post" action="/agent/profile/contract/add">
+  <div class="field-row">
+    <div><label for="client_name">Client</label><input type="text" name="client_name" id="client_name" required></div>
+    <div><label for="year">Year</label><input type="number" name="year" id="year"></div>
+    <div><label for="value">Value (BDT)</label><input type="number" name="contract_value_bdt" id="value"></div>
+  </div>
+  <label for="scope">Scope of work</label>
+  <textarea name="scope_of_work" id="scope" required></textarea>
+  <label for="location">Location</label>
+  <input type="text" name="location" id="location">
+  <div style="margin-top:16px;"><button class="btn secondary" type="submit">Add contract</button></div>
+</form>
+{% endblock %}

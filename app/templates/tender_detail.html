@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% block content %}
+{% if t %}
+{% set stage5_done = t.hard_filter_pass is not none %}
+
+<div class="stepper-row">
+  <form method="post" action="/agent/tender/{{ t.id }}/status" class="stepper no-print">
+    <button type="submit" name="status" value="new" class="stepper-step {% if t.status=='new' %}active{% endif %}">New</button>
+    <span class="stepper-arrow">&rarr;</span>
+    <button type="submit" name="status" value="tbd" class="stepper-step {% if t.status=='tbd' %}active{% endif %}">TBD</button>
+    <span class="stepper-arrow">&rarr;</span>
+    <button type="submit" name="status" value="selected" class="stepper-step {% if t.status=='selected' %}active{% endif %}">Selected</button>
+    <span class="stepper-arrow">&rarr;</span>
+    <button type="submit" name="status" value="applied" class="stepper-step {% if t.status=='applied' %}active{% endif %}">Applied</button>
+  </form>
+  <form method="post" action="/agent/tender/{{ t.id }}/status" class="reject-form no-print">
+    <button type="submit" name="status" value="rejected" class="btn reject-btn {% if t.status=='rejected' %}active{% endif %}">Reject</button>
+  </form>
+</div>
+{% if t.status not in ('new', 'tbd', 'selected', 'applied') %}
+<div class="status-note">Current status: <strong>{{ t.status|replace('_', ' ')|title }}</strong></div>
+{% endif %}
+
+<div class="subtitle" style="margin-bottom:12px;">
+  {% if t.hard_filter_pass is none %}
+    <span class="badge review">Needs review</span>
+  {% elif t.hard_filter_pass %}
+    <span class="badge pass">Eligible</span>
+  {% else %}
+    <span class="badge fail">Not eligible</span>
+  {% endif %}
+  {% if t.fit_score is not none %}<span class="badge score">Fit {{ t.fit_score }}/100</span>{% endif %}
+  {{ macros.deadline_badge(t) }}
+  &middot; Source: {{ t.source }}
+</div>
+
+<div class="panel sheet">
+
+  <div class="sheet-section">
+    <h1>{{ t.title or "Untitled tender" }}</h1>
+    <div class="sheet-caller">{{ t.organization or "Organisation not specified" }}{% if t.district %} &middot; {{ t.district }}{% endif %}</div>
+    <div class="sheet-priority">
+      {% if t.priority %}<span class="priority-badge {{ t.priority }}">{{ t.priority|capitalize }} priority</span>{% endif %}
+      <form method="post" action="/agent/tender/{{ t.id }}/priority" class="inline-edit-form no-print" style="display:inline-flex; margin-top:8px;">
+        <select name="priority">
+          <option value="" disabled {% if not t.priority %}selected{% endif %}>Set priority&hellip;</option>
+          <option value="high" {% if t.priority=="high" %}selected{% endif %}>High</option>
+          <option value="medium" {% if t.priority=="medium" %}selected{% endif %}>Medium</option>
+          <option value="low" {% if t.priority=="low" %}selected{% endif %}>Low</option>
+        </select>
+        <button class="btn secondary" type="submit">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="sheet-section">
+    <div class="sheet-row"><div class="k">Type</div><div class="v">{{ t.tender_type or "Not classified" }}</div></div>
+    <div class="sheet-row"><div class="k">Publish Date</div><div class="v">{{ t.publish_date.strftime('%d %b %Y') if t.publish_date else "Not available" }}</div></div>
+    <div class="sheet-row"><div class="k">Submission Date</div><div class="v">{{ t.deadline or "Not specified" }}{% if t.deadline_date %} &middot; {{ t.deadline_display }}{% endif %}</div></div>
+    <div class="sheet-row"><div class="k">Source Link</div><div class="v">{% if t.notice_url %}<a href="{{ t.notice_url }}" target="_blank" rel="noopener">Open notice &rarr;</a>{% else %}Not available{% endif %}</div></div>
+  </div>
+
+  {% if not stage5_done %}
+  <div class="sheet-section">
+    <div class="unavailable-panel">
+      <p><strong>Not available from the alert email.</strong> Open the notice and paste it into Add tender to fill these in.</p>
+      {% if t.notice_url %}<a class="btn no-print" href="{{ t.notice_url }}" target="_blank" rel="noopener">Open notice</a>{% endif %}
+    </div>
+  </div>
+  {% else %}
+  <div class="sheet-section">
+    <div class="sheet-block-label">Instructions</div>
+    <div class="sheet-block-body">{{ t.instructions or "Not specified" }}</div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-block-label">Financial Requirement</div>
+    <div class="sheet-block-body">{{ t.financial_requirement or "Not specified" }}</div>
+  </div>
+  <div class="sheet-section">
+    <div class="sheet-block-label">Required Documents / Certificates</div>
+    <div class="sheet-block-body">{{ t.required_documents or "Not specified" }}</div>
+  </div>
+  {% endif %}
+
+  <div class="sheet-section">
+    <div class="sheet-row"><div class="k">Purchase</div><div class="v">{% if t.document_price %}{{ t.document_price }} BDT{% else %}Cost not stated{% endif %}</div></div>
+    <form method="post" action="/agent/tender/{{ t.id }}/purchase-status" class="inline-edit-form no-print">
+      <select name="purchase_status">
+        <option value="not_purchased" {% if not t.purchase_status or t.purchase_status=="not_purchased" %}selected{% endif %}>Not purchased</option>
+        <option value="purchased" {% if t.purchase_status=="purchased" %}selected{% endif %}>Purchased</option>
+        <option value="na" {% if t.purchase_status=="na" %}selected{% endif %}>N/A</option>
+      </select>
+      <button class="btn secondary" type="submit">Save</button>
+    </form>
+  </div>
+
+  <div class="sheet-section">
+    <div class="sheet-block-label">Special Note</div>
+    <form method="post" action="/agent/tender/{{ t.id }}/special-note" class="inline-edit-form no-print">
+      <textarea name="special_note" placeholder="Add a note for this tender&hellip;">{{ t.special_note or "" }}</textarea>
+      <button class="btn secondary" type="submit">Save</button>
+    </form>
+  </div>
+
+</div>
+
+<h2>Why this decision</h2>
+<div class="panel">
+  <div class="detail-block"><div class="k">Hard filter</div><div class="v">{{ t.hard_filter_reason }}</div></div>
+  <div class="detail-block"><div class="k">Fit score reasoning</div><div class="v">{{ t.fit_reasons }}</div></div>
+</div>
+
+<h2>Original text</h2>
+<div class="panel"><div class="v" style="max-height:300px; overflow:auto;">{{ t.raw_text }}</div></div>
+
+{% else %}
+<div class="empty">Tender not found.</div>
+{% endif %}
+{% endblock %}

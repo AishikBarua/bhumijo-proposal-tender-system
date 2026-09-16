@@ -1,0 +1,20 @@
+# Keep the image small and keep secrets out of it.
+
+# Data is MOUNTED at run time, never baked into the image — otherwise every
+# rebuild would ship a stale copy of your database.
+data/
+tender_agent.db
+
+# Secrets never go inside an image.
+.env
+
+# Windows-only launchers — meaningless in a Linux container.
+*.bat
+*.vbs
+
+__pycache__/
+*.pyc
+.git/
+.gitignore
+docs/
+README.md

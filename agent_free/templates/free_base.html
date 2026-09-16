@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Bhumijo · Tender Finder{% endblock %}</title>
+<style>
+  :root{
+    --ink:#14261c; --paper:#f4f6f4; --card:#fff; --rule:#dfe5e0;
+    --muted:#5d6f64; --accent:#1f6b46; --accent-soft:#e8f2ec;
+    --warn:#8a5a0b; --warn-soft:#fbf3e4; --bad:#a3302a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);
+       font:15px/1.55 "Segoe UI",system-ui,sans-serif}
+  header{background:var(--ink);color:#fff;padding:14px 26px;
+         display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+  header .brand{font-weight:700;font-size:17px}
+  header .brand span{color:#8fd0ae;font-weight:400}
+  header nav{margin-left:auto;display:flex;gap:20px;flex-wrap:wrap}
+  header a{color:#cfe5d9;text-decoration:none;font-size:14px}
+  header a:hover{color:#fff}
+  main{max-width:1180px;margin:0 auto;padding:26px}
+  h1{font-size:23px;margin:0 0 6px}
+  .sub{color:var(--muted);margin:0 0 22px}
+  .card{background:var(--card);border:1px solid var(--rule);border-radius:6px;
+        padding:20px 22px;margin-bottom:18px}
+  .banner{padding:12px 16px;border-radius:5px;margin-bottom:18px;font-size:14px}
+  .banner.info{background:var(--accent-soft);border:1px solid #bcdccb}
+  .banner.warn{background:var(--warn-soft);border:1px solid #e8d5aa;color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+     color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--rule)}
+  td{padding:10px 12px;border-bottom:1px solid var(--rule);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;
+        background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+  .pill.grey{background:#eceee d;color:var(--muted)}
+  .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .why{color:var(--muted);font-size:12.5px;margin-top:3px}
+  button,.btn{background:var(--accent);color:#fff;border:0;border-radius:5px;
+              padding:9px 16px;font-size:14px;cursor:pointer;text-decoration:none;
+              display:inline-block}
+  button.ghost{background:#fff;color:var(--ink);border:1px solid var(--rule)}
+  textarea,input[type=text]{width:100%;border:1px solid var(--rule);border-radius:5px;
+       padding:10px;font:14px/1.5 inherit;font-family:inherit}
+  textarea{min-height:150px;resize:vertical}
+  label{display:block;font-weight:600;margin:16px 0 6px;font-size:14px}
+  .hint{color:var(--muted);font-size:13px;margin:2px 0 0}
+  .empty{color:var(--muted);text-align:center;padding:36px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Bhumijo <span>Tender Finder — no API</span></div>
+  <nav>
+    <a href="/">← Tracker</a>
+    <a href="/agent">AI Agent</a>
+    <a href="/agent-free/">Found tenders</a>
+    <a href="/agent-free/keywords">Keywords</a>
+    <a href="/agent-free/paste">Paste a digest</a>
+  </nav>
+</header>
+<main>
+{% block body %}{% endblock %}
+</main>
+</body>
+</html>

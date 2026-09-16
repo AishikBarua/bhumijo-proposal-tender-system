@@ -1,0 +1,265 @@
+<!-- The proposals screen, its add/edit modal, the detail drawer and the delete confirmation.
+     Markup lifted unchanged from the original single file. -->
+
+    <div class="page" id="page-proposals">
+      <!-- ENTITY SUMMARY STRIP -->
+      <div class="entity-summary-strip" id="entity-summary-strip" style="display:none">
+        <div class="ess-header">
+          <div class="ess-entity-label" id="ess-entity-label">Planning &amp; Design</div>
+          <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="clearEntityFilter()">✕ Clear Filter</button>
+        </div>
+        <div class="ess-grid">
+          <div class="ess-item ess-urgent">
+            <div class="ess-val ess-red" id="ess-dead7">–</div>
+            <div class="ess-lbl">Available<br>Next 7 Days</div>
+          </div>
+          <div class="ess-item ess-warn">
+            <div class="ess-val ess-amber" id="ess-dead15">–</div>
+            <div class="ess-lbl">Available<br>Next 15 Days</div>
+          </div>
+          <div class="ess-divider"></div>
+          <div class="ess-item">
+            <div class="ess-val ess-blue" id="ess-total">–</div>
+            <div class="ess-lbl">Total Programs<br>Till Date</div>
+          </div>
+          <div class="ess-item">
+            <div class="ess-val ess-purple" id="ess-hold">–</div>
+            <div class="ess-lbl">Hold</div>
+          </div>
+          <div class="ess-item">
+            <div class="ess-val ess-amber" id="ess-yet">–</div>
+            <div class="ess-lbl">Yet to<br>Submit</div>
+          </div>
+          <div class="ess-item ess-submitted-block">
+            <div class="ess-val ess-accent" id="ess-submitted">–</div>
+            <div class="ess-lbl">Submitted</div>
+            <div class="ess-sub-chips">
+              <span class="ess-chip waiting">⏳ <span id="ess-waiting">–</span></span>
+              <span class="ess-chip accepted">✓ <span id="ess-accepted">–</span></span>
+              <span class="ess-chip rejected">✗ <span id="ess-rejected">–</span></span>
+            </div>
+          </div>
+          <div class="ess-item">
+            <div class="ess-val ess-red" id="ess-unable">–</div>
+            <div class="ess-lbl">Unable to<br>Submit</div>
+          </div>
+          <div class="ess-item">
+            <div class="ess-val ess-gray" id="ess-drop">–</div>
+            <div class="ess-lbl">Drop</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-toolbar">
+          <h3 id="proposals-table-title">All Proposals</h3>
+          <input class="search-input" placeholder="🔍  Search title, client…" oninput="filterTable()" id="search-input">
+          <select class="filter-select" onchange="filterTable(); renderEntitySummaryStrip(this.value)" id="filter-entity">
+            <option value="">All Entities</option>
+            <option value="P&D">Planning & Design</option>
+            <option value="FM">Facility Management</option>
+            <option value="WASH">WASH / Toilets</option>
+            <option value="Tech">Technology</option>
+          </select>
+          <select class="filter-select" onchange="filterTable()" id="filter-status">
+            <option value="">All Status</option>
+            <option value="Yet to be submitted">Yet to Submit</option>
+            <option value="Submitted">Submitted</option>
+            <option value="Submitted & Waiting for Result">Submitted & Waiting For Result</option>
+            <option value="Submitted & Accepted">Submitted & Accepted</option>
+            <option value="Submitted & Rejected">Submitted & Rejected</option>
+            <option value="Hold">Hold</option>
+            <option value="Drop">Drop</option>
+            <option value="Unable to submit">Unable to Submit</option>
+          </select>
+          <select class="filter-select" onchange="filterTable()" id="filter-result">
+            <option value="">All Results</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Waiting for Result">Waiting</option>
+          </select>
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap">From</span>
+          <input type="date" class="filter-select" id="filter-start-date" onchange="filterTable()" title="Filter by closing date, from" style="width:140px">
+          <span style="font-size:12px;color:var(--text3);white-space:nowrap">To</span>
+          <input type="date" class="filter-select" id="filter-end-date" onchange="filterTable()" title="Filter by closing date, to" style="width:140px">
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortBy('title')">Title ↕</th>
+              <th onclick="sortBy('entity')">Entity ↕</th>
+              <th onclick="sortBy('category')">Category ↕</th>
+              <th onclick="sortBy('closeDate')">Days Left ↕</th>
+              <th onclick="sortBy('closeDate')">Deadline ↕</th>
+              <th onclick="sortBy('status')">Status ↕</th>
+              <th>Responsible</th>
+              <th>Latest Remark</th>
+            </tr>
+          </thead>
+          <tbody id="main-tbody"></tbody>
+        </table>
+        <div class="pagination">
+          <span id="page-info">–</span>
+          <div class="page-controls" id="page-controls"></div>
+        </div>
+      </div>
+    </div>
+
+<div class="modal-overlay" id="proposal-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-title" id="modal-title">New Proposal</div>
+    <div class="modal-sub" id="modal-sub">Upload a document to auto-fill, or enter details manually.</div>
+
+    <!-- UPLOAD ZONE -->
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('doc-upload').click()"
+         ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <div class="upload-zone-icon">📄</div>
+      <div class="upload-zone-label">Upload Proposal Document</div>
+      <div class="upload-zone-sub">PDF, DOCX, TXT or image — AI will extract fields automatically</div>
+      <div class="upload-status" id="upload-status"></div>
+    </div>
+    <input type="file" id="doc-upload" style="display:none" accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg" onchange="handleFileUpload(event)">
+
+    <div class="form-grid">
+      <!-- Basic Info -->
+      <div class="form-section-divider full"><span>Proposal Details</span></div>
+      <div class="form-group full" id="fg-title">
+        <label class="form-label">Title <span class="req">*</span></label>
+        <input class="form-input" id="f-title" placeholder="Proposal or tender title…" oninput="clearFieldError('fg-title')">
+        <div class="field-hint" id="fh-title">⚠ Title is required</div>
+      </div>
+      <div class="form-group" id="fg-entity">
+        <label class="form-label">Entity <span class="req">*</span></label>
+        <select class="form-select" id="f-entity" onchange="clearFieldError('fg-entity')">
+          <option value="">– Select entity –</option>
+          <option value="P&D">Planning & Design (P&D)</option>
+          <option value="FM">Facility Management (FM)</option>
+          <option value="WASH">WASH / Toilets</option>
+          <option value="Tech">Technology</option>
+        </select>
+        <div class="field-hint" id="fh-entity">⚠ Entity is required</div>
+      </div>
+      <div class="form-group" id="fg-category">
+        <label class="form-label">Category <span class="req">*</span></label>
+        <div class="multiselect-wrap" id="category-wrap">
+          <input class="form-input" id="f-category" placeholder="Select or add categories…" autocomplete="off" oninput="clearFieldError('fg-category')" onfocus="openCategoryDropdown()">
+          <div class="multiselect-panel" id="category-panel">
+            <div id="category-options"></div>
+            <div class="multiselect-add-row">
+              <input type="text" id="category-add-input" placeholder="Add new category…" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomCategoryName();}">
+              <button type="button" onclick="addCustomCategoryName()">+ Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="field-hint" id="fh-category">⚠ Category is required</div>
+      </div>
+      <div class="form-group" id="fg-client">
+        <label class="form-label">Client / Funder <span class="req">*</span></label>
+        <input class="form-input" id="f-client" placeholder="Organisation or person name…" oninput="clearFieldError('fg-client')">
+        <div class="field-hint" id="fh-client">⚠ Client / Funder is required</div>
+      </div>
+      <div class="form-group" id="fg-value">
+        <label class="form-label">Project Value <span style="font-size:11px;color:var(--text3)">(optional)</span></label>
+        <input class="form-input" id="f-value" placeholder="e.g. 6,00,000 BDT or USD 25,000">
+      </div>
+      <div class="form-group" id="fg-responsible">
+        <label class="form-label">Responsible Person <span class="req">*</span></label>
+        <div class="multiselect-wrap" id="responsible-wrap">
+          <input class="form-input" id="f-responsible" placeholder="Team member name(s)…" autocomplete="off" oninput="clearFieldError('fg-responsible')" onfocus="openResponsibleDropdown()">
+          <div class="multiselect-panel" id="responsible-panel">
+            <div id="responsible-options"></div>
+            <div class="multiselect-add-row">
+              <input type="text" id="responsible-add-input" placeholder="Add new name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomResponsibleName();}">
+              <button type="button" onclick="addCustomResponsibleName()">+ Add</button>
+            </div>
+          </div>
+        </div>
+        <div class="field-hint" id="fh-responsible">⚠ Responsible Person is required</div>
+      </div>
+      <div class="form-group" id="fg-fileLoc">
+        <label class="form-label">File Location <span style="font-size:11px;color:var(--text3)">(optional)</span></label>
+        <input class="form-input" id="f-fileLoc" placeholder="e.g. folder path or drive link to saved documents">
+      </div>
+      <!-- Dates -->
+      <div class="form-section-divider full"><span>Dates & Status</span></div>
+      <div class="form-group" id="fg-openDate">
+        <label class="form-label">Opening Date <span class="req">*</span></label>
+        <input class="form-input" type="date" id="f-openDate" onchange="clearFieldError('fg-openDate')">
+        <div class="field-hint" id="fh-openDate">⚠ Opening Date is required</div>
+      </div>
+      <div class="form-group" id="fg-closeDate">
+        <label class="form-label">Closing / Submission Date <span class="req">*</span></label>
+        <input class="form-input" type="date" id="f-closeDate" onchange="clearFieldError('fg-closeDate')">
+        <div class="field-hint" id="fh-closeDate">⚠ Closing Date is required</div>
+      </div>
+      <div class="form-group" id="fg-status">
+        <label class="form-label">Submission Status <span class="req">*</span></label>
+        <select class="form-select" id="f-status" onchange="onStatusChange(); clearFieldError('fg-status')">
+          <option value="">– Select status –</option>
+          <option value="Yet to be submitted">Yet to Submit</option>
+          <option value="Submitted">Submitted</option>
+          <option value="Submitted & Waiting for Result">Submitted & Waiting For Result</option>
+          <option value="Submitted & Accepted">Submitted & Accepted</option>
+          <option value="Submitted & Rejected">Submitted & Rejected</option>
+          <option value="Hold">Hold</option>
+          <option value="Drop">Drop</option>
+          <option value="Unable to submit">Unable to Submit</option>
+        </select>
+        <div class="field-hint" id="fh-status">⚠ Submission Status is required</div>
+      </div>
+      <div class="form-group" id="fg-contract">
+        <label class="form-label" id="contract-label">Contract Signed</label>
+        <select class="form-select" id="f-contract" onchange="clearFieldError('fg-contract')">
+          <option value="">– Select –</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+        <div class="field-hint" id="fh-contract">⚠ Required when result is Accepted</div>
+      </div>
+      <div class="form-group" id="fg-startDate">
+        <label class="form-label">Project Start Date</label>
+        <input class="form-input" type="date" id="f-startDate">
+      </div>
+      <div class="form-group" id="fg-endDate">
+        <label class="form-label">Project End Date</label>
+        <input class="form-input" type="date" id="f-endDate">
+      </div>
+      <!-- Remarks -->
+      <div class="form-section-divider full"><span>Notes</span></div>
+      <div class="form-group full" id="fg-remark">
+        <label class="form-label">Remarks / Notes <span class="req">*</span></label>
+        <textarea class="form-textarea" id="f-remark" placeholder="Latest update, next action, JV partner, key dates…" oninput="clearFieldError('fg-remark')"></textarea>
+        <div class="field-hint" id="fh-remark">⚠ Please add at least a brief remark</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProposal()">Save Proposal</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLIENT MODAL -->
+
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="detail-drawer">
+  <div class="drawer-header">
+    <div class="drawer-title" id="drawer-title">–</div>
+    <button class="modal-close" onclick="closeDrawer()">✕</button>
+  </div>
+  <div id="drawer-body"></div>
+  <div class="drawer-actions" id="drawer-actions"></div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <h3>Delete?</h3>
+    <p id="confirm-msg">This action cannot be undone.</p>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Delete</button>
+    </div>
+  </div>
+</div>

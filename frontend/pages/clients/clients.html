@@ -1,0 +1,75 @@
+<!-- The clients screen and its modal.
+     Markup lifted unchanged from the original single file. -->
+
+    <div class="page" id="page-clients">
+      <div class="clients-header">
+        <h2>Client Records</h2>
+        <button class="btn btn-primary" onclick="openClientModal()">+ Add Client</button>
+        <button class="btn btn-ghost" onclick="exportClientsCSV()">↓ Export CSV</button>
+      </div>
+      <div id="client-search-bar" style="margin-bottom:16px;display:flex;gap:10px">
+        <input class="search-input" style="width:260px" placeholder="🔍  Search clients…" oninput="renderClients()" id="client-search">
+        <select class="filter-select" onchange="renderClients()" id="client-filter-entity">
+          <option value="">All Entities</option>
+          <option value="P&D">Planning & Design</option>
+          <option value="FM">Facility Management</option>
+          <option value="WASH">WASH / Toilets</option>
+          <option value="Tech">Technology</option>
+        </select>
+      </div>
+      <div class="client-grid" id="client-grid"></div>
+    </div>
+
+<div class="modal-overlay" id="client-modal">
+  <div class="modal" style="max-width:520px">
+    <button class="modal-close" onclick="closeClientModal()">✕</button>
+    <div class="modal-title" id="client-modal-title">Add Client</div>
+    <div class="modal-sub">Manually add a client record</div>
+    <div class="form-grid">
+      <div class="form-group" id="fcg-name">
+        <label class="form-label">Client Name <span class="req">*</span></label>
+        <input class="form-input" id="fc-name" placeholder="Client or organisation name…">
+      </div>
+      <div class="form-group" id="fcg-entity">
+        <label class="form-label">Entity <span class="req">*</span></label>
+        <select class="form-select" id="fc-entity">
+          <option value="">– Select –</option>
+          <option value="P&D">Planning & Design</option>
+          <option value="FM">Facility Management</option>
+          <option value="WASH">WASH / Toilets</option>
+          <option value="Tech">Technology</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Project Name <span class="req">*</span></label>
+        <input class="form-input" id="fc-project" placeholder="Project title…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project Value</label>
+        <input class="form-input" id="fc-value" placeholder="e.g. 6,00,000 BDT">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Responsible Person</label>
+        <input class="form-input" id="fc-responsible" placeholder="Team member…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project Start Date</label>
+        <input class="form-input" type="date" id="fc-startDate">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Project End Date</label>
+        <input class="form-input" type="date" id="fc-endDate">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Notes</label>
+        <textarea class="form-textarea" id="fc-notes" placeholder="Any additional notes…" style="min-height:60px"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeClientModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()">Save Client</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL DRAWER -->
