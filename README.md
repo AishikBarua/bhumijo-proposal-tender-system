@@ -28,30 +28,30 @@ Four components in a single FastAPI process, two deliberately separate SQLite da
 
 ```mermaid
 flowchart LR
-    MAIL[Tender alert<br/>mailbox]
-    STAFF[Office staff<br/>browsers]
+    MAIL["Tender alert mailbox"]
+    STAFF["Office staff browsers"]
 
-    subgraph APP["One FastAPI process · port 8787"]
+    subgraph APP["One FastAPI process - port 8787"]
         direction TB
-        UI[Tracker screens<br/>+ Grant hitlist]
-        API["REST API<br/>/api/v1"]
-        AGENT["Assisted monitor<br/>/agent"]
-        FREE["Keyword monitor<br/>/agent-free"]
-        JOBS[Scheduled jobs<br/>backup · deadlines · digest]
+        UI["Tracker screens + Grant hitlist"]
+        API["REST API - /api/v1"]
+        AGENT["Assisted monitor - /agent"]
+        FREE["Keyword monitor - /agent-free"]
+        JOBS["Scheduled jobs - backup, deadlines, digest"]
     end
 
-    RDB[(records.db<br/>proposals · grants<br/>clients · audit)]
-    TDB[(tender.db<br/>tenders · profile<br/>settings)]
+    RDB[("records.db<br/>proposals, grants, clients, audit")]
+    TDB[("tender.db<br/>tenders, profile, settings")]
 
-    MAIL -->|IMAP, every 5 min| AGENT
-    MAIL -->|IMAP, every 5 min| FREE
+    MAIL -->|IMAP every 5 min| AGENT
+    MAIL -->|IMAP every 5 min| FREE
     STAFF --> UI
     UI --> API
     API --> RDB
     JOBS --> RDB
     AGENT --> TDB
     FREE --> TDB
-    AGENT -.->|on "selected"| API
+    AGENT -.->|on selected| API
 ```
 
 The two databases never join. The only traffic between them is an HTTP call when a tender is marked for pursuit and becomes a proposal — so the tender side can be reset or rebuilt at any time with zero risk to the company's records.
@@ -64,15 +64,15 @@ The core of the system, and where its design decisions live.
 
 ```mermaid
 flowchart TD
-    A["📬 Read mailbox<br/><i>last 3 days, max 50 emails</i>"] --> B
-    B{"Is this a tender email?<br/><i>subject + 1000 chars only</i>"} -->|no| X1[skip]
-    B -->|yes| C["Split digest into listings<br/><i>BeautifulSoup — no AI</i>"]
+    A["Read mailbox<br/>last 3 days, max 50 emails"] --> B{"Is this a tender email?<br/>subject and first 1000 chars only"}
+    B -->|no| X1["skip"]
+    B -->|yes| C["Split digest into listings<br/>BeautifulSoup, no AI"]
     C --> D{"Seen this reference before?"}
     D -->|yes| X2["refresh deadline only"]
-    D -->|no| E{"Is this our sector?<br/><i>title + org + district only</i>"}
+    D -->|no| E{"Is this our sector?<br/>title, organisation, district only"}
     E -->|no| X3["mark filtered_out"]
-    E -->|yes| F["Score the fit 0–100<br/><i>with written reasoning</i>"]
-    F --> G["💾 Save — eligibility marked<br/><b>'needs review'</b>, never guessed"]
+    E -->|yes| F["Score the fit 0-100<br/>with written reasoning"]
+    F --> G["Save - eligibility marked<br/>needs review, never guessed"]
 
     style B fill:#fff3e0,stroke:#e65100
     style E fill:#fff3e0,stroke:#e65100
@@ -81,7 +81,7 @@ flowchart TD
     style D fill:#e8f5e9,stroke:#2e7d32
 ```
 
-🟠 paid model call &nbsp;&nbsp; 🟢 plain code, free
+Orange = paid model call &nbsp;·&nbsp; Green = plain code, free
 
 ---
 
